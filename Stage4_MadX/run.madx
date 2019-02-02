@@ -1,0 +1,94 @@
+TITLE, "SPSUA9" ;
+OPTION, -ECHO, -WARN, INFO;
+option, echo;
+assign, ECHO=./output/ECHO.PRT;
+
+call, file = './src/sps.ele';
+call, file = './src/aperturedb_1.dbx';
+call, file = './src/aperturedb_2.dbx';
+call, file = './src/sps.seq';
+call, file = './src/aperturedb_3.dbx';
+call, file = './src/SPS_Q20.str';
+!call, file = './src/SPS_Q26.str';
+call, file = './src/elements.str';
+call, file = './src/totem_beam_270GeV.beamx';
+
+!these files are available in AFS and in http://project-sps-optics.web.cern.ch/project-SPS-optics/2015/ 
+
+call, file = './src/UA9_elements.ele';
+
+MAKETHIN,SEQUENCE=SPS;
+USE, SEQUENCE=SPS;
+
+SELECT,FLAG=TWISS,COLUMN=KEYWORD,NAME,S,L,X,Y,BETX,BETY,ALFX,ALFY,MUX,MUY,DX,DY,DPX,DPY;
+
+TWISS,
+SEQUENCE=SPS,centre,SECTORMAP, SECTORFILE="./output/OUTPUT_SECTOR.data", FILE="./output/Twiss_SPS_UA9.dat", RANGE=CRY4.51799.UA9/XRPH.52202.UA9;
+
+PLOT,
+HAXIS=s, VAXIS=betx,bety,dx,dy,colour=100, interpolate;
+
+//*************************************************//
+! TRACKING
+//*************************************************//
+PTC_CREATE_UNIVERSE;
+
+PTC_CREATE_LAYOUT,
+model=2,method=6,nst=10,exact;
+
+PTC_START,
+x=-0.0227284, px=-623.573e-06, y=0, py=0;
+
+PTC_OBSERVE,
+place=CRY4.51799.UA9;
+
+PTC_OBSERVE,
+place=QF.51810;
+
+PTC_OBSERVE,
+place=QD.51910;
+
+PTC_OBSERVE,
+place=XRPH.51937.UA9;
+
+PTC_OBSERVE,
+place=LSF.52005;
+
+PTC_OBSERVE,
+place=QF.52010;
+
+PTC_OBSERVE,
+place=MBA.52030_DEX;
+
+PTC_OBSERVE,
+place=MBA.52050_DEX;
+
+PTC_OBSERVE,
+place=MBB.52070_DEX;
+
+PTC_OBSERVE,
+place=MBB.52090_DEX;
+
+PTC_OBSERVE,
+place=QD.52110;
+
+PTC_OBSERVE,
+place=MBB.52130_DEX;
+
+PTC_OBSERVE,
+place=MBB.52150_DEX;
+
+PTC_OBSERVE,
+place=XRPH.52202.UA9;
+
+PTC_TRACK,
+ICASE=5,DELTAP=0,CLOSED_ORBIT=false,ELEMENT_BY_ELEMENT=true,ONETABLE=true,DUMP=true, TURNS=1 ,FFILE=1;
+
+!plot, file="PTC_TRACK",table=track,haxis=px,vaxis=x,particle=1, colour=1000, multiple, symbol=3;
+
+PTC_TRACK_END;
+PTC_END;
+//*************************************************//
+
+return;
+stop;

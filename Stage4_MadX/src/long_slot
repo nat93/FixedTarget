@@ -1,0 +1,21 @@
+install, element=CRY3.51799.UA9, at:= 5180.8295;
+
+install, element=CRY4.51799.UA9, at:= 5181.3245;
+
+QF.51810            : QF           , AT = 5185.1704    , SLOT_ID = 2363376;
+QD.51910            : QD           , AT = 5217.1681    , SLOT_ID = 2363389;
+
+install, element=XRPH.51937.UA9, at:=5223.92725;
+
+LSF.52005           : LSF          , AT = 5246.6163    , SLOT_ID = 2363396;
+QF.52010            : QF           , AT = 5249.1658    , SLOT_ID = 2363399;
+MBA.52030           : MBA          , AT = 5254.1983    , SLOT_ID = 2363400;
+MBA.52050           : MBA          , AT = 5260.8583    , SLOT_ID = 2363401;
+MBB.52070           : MBB          , AT = 5267.5083    , SLOT_ID = 2363402;
+MBB.52090           : MBB          , AT = 5274.1483    , SLOT_ID = 2363403;
+QD.52110            : QD           , AT = 5281.1635    , SLOT_ID = 2363408;
+MBB.52130           : MBB          , AT = 5286.186     , SLOT_ID = 2363409;
+MBB.52150           : MBB          , AT = 5292.826     , SLOT_ID = 2363411;
+
+install, element=XRPH.52202.UA9, at:= 5309.700035;
+

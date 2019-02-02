@@ -1,0 +1,99 @@
+! UA9 redefinition of elements  -Layout after 201801 YETS
+! gonio displaced downstream 51797 -> 51799
+! absorber in place of gonio in 51797
+! 1 more Roman Pot upstream in 51779
+
+USE, period=SPS;
+
+TCXHW.51651.UA9 : MARKER;   ! Tungsten scraper in place of SPS collimator starting in 2012
+
+CRY3.51797.UA9 : MARKER; 	!obsolete
+CRY4.51797.UA9 : MARKER; 	!obsolete
+CRY3.51799.UA9 : MARKER;
+CRY4.51799.UA9 : MARKER;
+CRY1.51652.UA9 : MARKER;	! after gonio displacement 201707
+CRY2.51652.UA9 : MARKER; 	! after gonio displacement 201707
+
+CRY6.51792.UA9 : MARKER;                                                    !!!! gonio not in place yet
+SC.51793.UA9 : MARKER;                  ! SCATTERER LINEAR 1
+SI.51794.UA9 : MARKER;                  ! QUARTZ LINEAR 2
+CRY5.51795.UA9 : MARKER;                ! Crystal 5 on Piezo Gonio (position of Cry7 in old layouts and files)
+
+TCSMs.51934.UA9: MARKER;   ! LHC collimator start
+TCSM.51934.UA9: MARKER;    ! LHC coll center
+TCSMe.51934.UA9: MARKER;   ! LHC coll end
+TACWs.51998.UA9: MARKER;   !TAL 1 start, center and end
+TACW.51998.UA9: MARKER;
+TACWe.51998.UA9: MARKER;
+
+TACW0s.51797.UA9: MARKER;   !TAL 0 start, center and end
+TACW0.51797.UA9: MARKER;
+TACW0e.51797.UA9: MARKER;
+TALSI.52196.UA9: MARKER;   !TAL2 QUARTZ
+TALABS.52196.UA9: MARKER;  !TAL2 ABSORBER
+
+XRPH0.51779.UA9: MARKER;   ! MEDIPIX, AKA ROMAN POT 0
+XRPH.51937.UA9 : MARKER;   ! MEDIPIX, AKA ROMAN POT 1
+CPFM.51991.UA9 : MARKER;    ! CpFM   (in The old medipix rp2 place, but 0.4313 m downstream)
+XRPH.52202.UA9 : MARKER;   !Mini roman pot or RP3
+
+
+seqedit, sequence=sps;
+        remove, element= TCXHW.51651;	! Tungsten Scraper (in place of SPS COLLIMATOR BRCZ.51651 until 2013 files)
+
+        remove, element=tecs.51797;
+        remove, element=tecs.51799;
+
+        remove, element=BSHV.51792;
+        remove, element=BSHV.51793;
+        remove, element=BSHV.51794;
+        remove, element=TCPC.51795;
+
+        remove, element=brcz.52102;    ! SPS collimators from LEP (not used in our Exp)
+        remove, element=brcv.51899;    !                  "
+        remove, element=brch.51902;    !                  "
+
+        remove, element=tcsm.51934;    ! LHC Collimator in drawings and tables since 2010 (named TCSP in 2009 tables)
+        remove, element=TACW.51998;
+        remove, element=tal.52196;
+
+        remove, element=xrph.51937;
+        remove, element=BSHV.51991;    !
+        remove, element=xrph.52202;
+
+                install, element=TCXHW.51651.UA9, at:= 5129.9275;     ! scraper  20.0 mm dwnstrm center
+                install, element=CRY1.51652.UA9, at:= 5130.8986;      ! after 51799 gonio (IHEP gonio 2) displacement in summer 2017
+                install, element=CRY2.51652.UA9, at:= 5131.3936;      ! after 51799 gonio (IHEP gonio 2) displacement in summer 2017
+!		install, element=CRY3.51797.UA9, at:=5179.4295;		!obsolete
+!		install, element=CRY4.51797.UA9, at:=5179.9245;		!obsolete
+                install, element=CRY3.51799.UA9, at:= 5180.8295;	!this position is taken now (2018) by former 51797 (IHEP gonio 1)
+                install, element=CRY4.51799.UA9, at:= 5181.3245;	!this position is taken now (2018) by former 51797 (IHEP gonio 1)
+                install, element=CRY5.51795.UA9, at:= 5178.1685;      ! Crystal on piezo gonio      18.6 mm dwnstrm center
+                install, element=SC.51793.UA9, at:= 5176.9945;        ! 18.6 mm dwnstrm center
+                install, element=SI.51794.UA9, at:= 5177.5815;        ! 18.6 mm dwnstrm center
+!		install, element=CRY6.51792.UA9, at:= 5176.4075;                               ! gonio not existing yet
+
+                install, element= TACW0s.51797.UA9, at:= 5179.3344;	!TACW0 installed Jan2018
+                install, element= TACW0.51797.UA9, at:= 5179.6344;
+                install, element= TACW0e.51797.UA9, at:= 5179.9344;
+
+                install, element= TCSMs.51934.UA9, at:= 5221.30075;
+                install, element= TCSM.51934.UA9, at:= 5221.80075;    ! 20.15 mm dwnstrm center
+                install, element= TCSMe.51934.UA9, at:= 5222.30075;
+
+                install, element= TACWs.51998.UA9, at:= 5244.04725;
+                install, element= TACW.51998.UA9, at:= 5244.34725;    ! 4.05 mm upstream center
+                install, element= TACWe.51998.UA9, at:= 5244.64725;
+
+                install, element= TALSI.52196.UA9, at:= 5307.74375;
+                install, element= TALABS.52196.UA9, at:= 5308.52875;
+
+                install, element=XRPH0.51779.UA9, at:=5175.4259;   ! Roman Pot 0 medipix position @ 231.5 mm upstrm center, same as when it was in 51991 as RomanPot2
+                install, element=XRPH.51937.UA9, at:=5223.92725;   ! Roman Pot 1  @ 20.15 mm dwnstrm center
+                install, element=CPFM.51991.UA9, at:=5239.96075;   ! CpFM  placed @ 20.15 mm dwnstrm center
+! 2012 wrong	install, element=XRPH.52202.UA9, at:= 5310.15575;  ! mini RP Position was wrong in files 2012: 475.55mm downstream center
+                install, element=XRPH.52202.UA9, at:= 5309.700035; ! mini roman pot placed @ 20.15 mm dwnstrm center by analogy
+
+        flatten;
+        cycle, start= CRY4.51799.UA9;
+endedit;

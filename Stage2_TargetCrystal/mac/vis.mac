@@ -1,0 +1,22 @@
+##-----------------------------------------##
+/run/verbose 1
+/event/verbose 0
+/tracking/verbose 0
+##-----------------------------------------##
+
+#detector geometry
+/xtal/potfilename data/si110
+
+#initialize run before stacking and primary generator actions
+/run/initialize
+/vis/open HepRepFile
+/vis/drawVolume
+/vis/scene/add/trajectories
+/vis/scene/endOfEventAction accumulate
+
+#kill all secondaries produced
+/mystack/KillAllSecondaries 1
+
+##-----------------------------------------##
+/run/beamOn 10000
+##-----------------------------------------##

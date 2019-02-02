@@ -1,0 +1,12 @@
+
+#detector geometry
+/xtal/potfilename data/si110
+
+#initialize run before stacking and primary generator actions
+/run/initialize
+
+#kill all secondaries produced
+/mystack/KillAllSecondaries 1
+
+#beam on
+/run/beamOn 1000000

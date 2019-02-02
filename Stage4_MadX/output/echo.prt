@@ -1,0 +1,40 @@
+dpp                =    0.0006000072457 ;
+makethin: slicing sequence : sps
+enter Twiss module
+
+++++++ table: summ
+
+            length             orbit5               alfa            gammatr 
+        128.375535                 -0    0.0003498204231        53.46596621 
+
+                q1                dq1            betxmax              dxmax 
+      0.3886145044      -0.2591878917        108.5871488        1.808508959 
+
+             dxrms             xcomax             xcorms                 q2 
+       1.293396519                  0                  0       0.3890673087 
+
+               dq2            betymax              dymax              dyrms 
+     -0.5076397131        108.7705904                  0                  0 
+
+            ycomax             ycorms             deltap            synch_1 
+                 0                  0                  0                  0 
+
+           synch_2            synch_3            synch_4            synch_5 
+                 0                  0                  0                  0 
+
+            nflips 
+                 0 
+
+++++++ table: tracksumm
+
+    number       turn                  x                 px 
+         1          0         -0.0227284       -0.000623573 
+         1          1      0.01422998775   -5.527577233e-06 
+
+                 y                 py                  t                 pt 
+                 0       -0.000423573                  0                  0 
+     0.01761451459   -0.0003670782302                  0                  0 
+
+                 s                  e 
+                 0        270.0016303 
+          246.1423        270.0016303 
