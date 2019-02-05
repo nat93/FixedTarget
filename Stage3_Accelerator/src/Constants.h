@@ -52,8 +52,8 @@ const double _grad_quad_3 = 0.01157957644;      // [m-2] kQF2
 const double _grad_quad_4 = -0.01158097147;     // [m-2] kQD
 const double _grad_sext_1 = 0.04516855;         // [m-3] kLSFA
 
-const double _crystal_offset_x = -1.0e-3;       // [m]
-const double _crystal_offset_y = 0.0;           // [m]
+const double _crystal_offset_x = 0.0;       // [m]
+const double _crystal_offset_y = 0.0;       // [m]
 const int _order_transport_matrix = 1;
 
 const double _aph = 0.075;                      // [m]

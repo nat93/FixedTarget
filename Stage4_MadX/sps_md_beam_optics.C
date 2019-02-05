@@ -479,11 +479,11 @@ void function_3()
 
     const Double_t EMITTANCE = 3.7e-9;
     const Double_t S_MIN = 5120;
-    const Double_t S_MAX = 5320;
+    const Double_t S_MAX = 5310;
     const Double_t BEAMX_MIN = -0.040*1e3;
     const Double_t BEAMX_MAX =  0.010*1e3;
     const Double_t CRYSTAL2_DEFL = -300.0e-6;
-    const Double_t CRYSTAL3_DEFL = -200.0e-6;
+    const Double_t CRYSTAL3_DEFL = -5000.0e-6;
     const Double_t CRYSTAL_CRITICAL_ANGLE = 12.2e-6;
 
     Bool_t CRYSTAL2_CH_STATUS = false;
@@ -494,12 +494,6 @@ void function_3()
 
     for(Long64_t i = 0; i < nEntries; i++)
     {
-//        if(i%10 == 0)
-//        {
-//            printf("\r--> Working: %3.1f %%",100*(Double_t)i/nEntries);
-//            fflush(stdout);
-//        }
-
         fChain->GetEntry(i);
 
         if(_S < S_MIN || _S > S_MAX) continue;

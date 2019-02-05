@@ -96,6 +96,7 @@ Int_t main(int argc, char* argv[])
         cout<<endl;
         cout<<"--> 1 -- function_1() : single proton trajectory (-200 urad deflection)"<<endl;
         cout<<"--> 2 -- function_2() : Lc products trajectories"<<endl;
+        cout<<"--> 3 -- function_3() : for random parameters"<<endl;
         cout<<endl;
         cout<<"--> ERROR:: Wrong imput parameters number:"<<endl<<
               "--> [0] -- script name"<<endl<<
@@ -127,7 +128,7 @@ void function_1(TString output_file_name)
     Double_t Charge_C   = 1;
 
     /*x*/     coord_x0[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
-    /*x'*/    coord_x0[1] = Constants::_beamAngleInitialAtCryPosition+(-0.0002);// [rad]
+    /*x'*/    coord_x0[1] = Constants::_beamAngleInitialAtCryPosition+Constants::_crystalAngle;// [rad]
     /*y*/     coord_x0[2] = 0.0;                // [m]
     /*y'*/    coord_x0[3] = 0.0;                // [rad]
     /*l*/     coord_x0[4] = 0.0;
@@ -499,7 +500,7 @@ void function_3(TString output_file_name)
     TH3D* h_rp3_x = new TH3D("h_rp3_x","h_rp3_x",300,0,300,1000,-0.007,0.002,100,-1,1);
 
     const Int_t n_i = 100;
-    const Int_t n_j = 100000;
+    const Int_t n_j = 100;
 
     cout<<endl;
     for(Int_t i = 0; i < n_i; i++)
@@ -514,7 +515,7 @@ void function_3(TString output_file_name)
                 fflush(stdout);
             }
 
-            a = rnd->Uniform(-0.006,0.001);
+            a = rnd->Uniform(-0.006,0.006);
             /*x*/     coord_x0[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
             /*x'*/    coord_x0[1] = Constants::_beamAngleInitialAtCryPosition+(a);// [rad]
             /*y*/     coord_x0[2] = 0.0;                // [m]
@@ -675,58 +676,63 @@ void passMagnets(Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Cha
         // DRIFT6
         if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q3_52010_pos+DRIFTL6);
 
         // DIPOLE1: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mba_52030_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT7
         if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52030_pos+DL/2+DRIFTL7);
 
         // DIPOLE2: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mba_52050_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT8
         if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52050_pos+DL/2+DRIFTL8);
 
         // DIPOLE3: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mbb_52070_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT9
         if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52070_pos+DL/2+DRIFTL9);
 
         // DIPOLE4: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mbb_52090_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT10
         if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52090_pos+DL/2+DRIFTL10);
 
         // QUAD4: FOC in Y, DEFOC in X
         if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ4,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
@@ -740,32 +746,34 @@ void passMagnets(Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Cha
         // DRIFT11
         if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q4_52110_pos+DRIFTL11);
 
         // DIPOLE5: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mbb_52130_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT12
         if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
         {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52130_pos+DL/2+DRIFTL12);
 
         // DIPOLE6: BEND & DEFOC in X, FOC in Y
         if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
         {if(print) cout<<"## At : "<<Constants::_mbb_52150_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos,coord_temp_1_x[2]);
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos+DL/2);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[2]);
         gr_x_ipoint++;
         gr_y_ipoint++;
 
         // DRIFT13
         if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_temp_1_x,coord_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}
+        {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}        
     }
     else
     {

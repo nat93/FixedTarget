@@ -618,6 +618,7 @@ bool MagClass::GetNewCoordQuadrupole(Double_t K0, Double_t P, Double_t P0, Doubl
 
     GetQuadrupoleMatrixThinR(K0,P,P0,L,R);
     GetQuadrupoleMatrixThinT(K0,P,P0,L,T);
+
     GetNewCoord(X0,R,T,order,X);
 
     for(Int_t i = 0; i < _mtrx_size; i++)

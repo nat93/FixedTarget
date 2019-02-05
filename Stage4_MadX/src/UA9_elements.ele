@@ -95,5 +95,6 @@ seqedit, sequence=sps;
                 install, element=XRPH.52202.UA9, at:= 5309.700035; ! mini roman pot placed @ 20.15 mm dwnstrm center by analogy
 
         flatten;
-        cycle, start= CRY4.51799.UA9;
+!        cycle, start= CRY4.51799.UA9;
+        cycle, start= STARTSPS;
 endedit;
