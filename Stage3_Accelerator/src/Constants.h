@@ -21,7 +21,7 @@ const double _mbb_52130_pos = 5286.1860;        // [m]
 const double _mbb_52150_pos = 5292.8260;        // [m]
 const double _xrph_52202_ua9_pos = 5309.700035; // [m]
 
-const double _beamAngleInitialAtCryPosition     = -423.573e-6; // [rad]
+const double _beamAngleInitialAtCryPosition     = -535.513e-6; // [rad]
 const double _beamPositionInitialAtCryPosition  = -0.0227284;  // [m]
 
 const double _crystalAngle = -15000.0e-6;       // [rad]

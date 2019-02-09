@@ -152,6 +152,7 @@ void DecayClass::Boost(TLorentzVector& pIn, Double_t mIn, TLorentzVector& pOut)
     Double_t betaZ = pIn.Pz() / pIn.E();
     Double_t gamma = pIn.E() / mIn;
     Double_t prod1 = betaX * xx + betaY * yy + betaZ * zz;
+
     Double_t prod2 = gamma * (gamma * prod1 / (1. + gamma) + tt);
     xx += prod2 * betaX;
     yy += prod2 * betaY;

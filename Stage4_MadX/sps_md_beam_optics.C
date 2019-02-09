@@ -39,8 +39,8 @@
 
 using namespace std;
 
-Double_t get_beam_position(Double_t b1, Double_t b2, Double_t x1, Double_t m1, Double_t m2, Double_t theta);
-Double_t get_beam_angle(Double_t b1, Double_t b2, Double_t a2, Double_t x1, Double_t m1, Double_t m2, Double_t theta);
+Double_t get_beam_position(Double_t b1, Double_t b2, Double_t x1, Double_t x1p, Double_t a1, Double_t m1, Double_t m2, Double_t theta);
+Double_t get_beam_angle(Double_t b1, Double_t b2, Double_t a1, Double_t a2, Double_t x1, Double_t x1p, Double_t m1, Double_t m2, Double_t theta);
 
 int sps_md_beam_optics()
 {
@@ -169,12 +169,13 @@ void function_2()
     vector<Double_t> BEAMX_C4SIGMA_BOT;
 
     Double_t S_CRYSTAL2, S_LHC_COLL, S_RP1_INT, S_RP0_INT;
-    Double_t MUX_CRYSTAL2, BETAX_CRYSTAL2;
+    Double_t MUX_CRYSTAL2, BETAX_CRYSTAL2,ALFX_CRYSTAL2;
     Int_t I_CRYSTAL2, I_LHC_COLL, I_RP1_INT, I_RP0_INT;
     Int_t ITERATOR = 0;
 
     const Int_t nPositionOnCry2 = 1;
     Double_t BEAMX_CRYSTAL2[nPositionOnCry2];
+    Double_t BEAMXp_CRYSTAL2[nPositionOnCry2];
     TGraph* gr_BEAMX_DEFLECTED_CRY2[nPositionOnCry2];
     TGraph* gr_BEAMX_DEFLECTED_CRY2_MCRA[nPositionOnCry2];
     TGraph* gr_BEAMX_DEFLECTED_CRY2_PCRA[nPositionOnCry2];
@@ -248,10 +249,12 @@ void function_2()
             I_CRYSTAL2 = ITERATOR;
             MUX_CRYSTAL2 = _MUX;
             BETAX_CRYSTAL2 = _BETX;
+            ALFX_CRYSTAL2 = _ALFX;
 
             for(Int_t j = 0; j < nPositionOnCry2; j++)
             {
                 BEAMX_CRYSTAL2[j] += _X-sigmax_coef*4.0*TMath::Sqrt(EMITTANCE*_BETX);
+                BEAMXp_CRYSTAL2[j] = (-1.0)*(_ALFX/_BETX)*BEAMX_CRYSTAL2[j];
             }
             CRYSTAL2_CH_STATUS = true;
         }
@@ -292,26 +295,26 @@ void function_2()
         {
             for(Int_t j = 0; j < nPositionOnCry2; j++)
             {
-                gr_BEAMX_DEFLECTED_CRY2[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
-                gr_BEAMX_DEFLECTED_CRY2_MCRA[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
-                gr_BEAMX_DEFLECTED_CRY2_PCRA[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+                gr_BEAMX_DEFLECTED_CRY2[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
+                gr_BEAMX_DEFLECTED_CRY2_MCRA[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
+                gr_BEAMX_DEFLECTED_CRY2_PCRA[j]->SetPoint(gr_BEAMX_DEFLECTED_CRY2_ITERATOR,_S,get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
 
                 if(name.find("XRPH.51937.UA9") == 1)
                 {
-                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
-                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
-                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
+                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
+                    histo_RP1_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
                 }
                 if(name.find("CRY3.51799.UA9") == 1)
                 {
-                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
-                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
-                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
+                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
+                    histo_CRY3_projectionX->Fill(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
 
-                    cout<<endl<<"--> Angular Divergence = "<<(get_beam_angle(BETAX_CRYSTAL2,_BETX,_ALFX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE) -
-                                                              get_beam_angle(BETAX_CRYSTAL2,_BETX,_ALFX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE))*1e6<<" [urad]";
-                    cout<<endl<<"--> Spatial Divergence = "<<(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE) -
-                                                              get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE))*1e3<<" [mm]"<<endl;
+                    cout<<endl<<"--> Angular Divergence = "<<(get_beam_angle(BETAX_CRYSTAL2,_BETX,_ALFX,ALFX_CRYSTAL2,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE) -
+                                                              get_beam_angle(BETAX_CRYSTAL2,_BETX,_ALFX,ALFX_CRYSTAL2,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE))*1e6<<" [urad]"<<endl;
+                    cout<<endl<<"--> Spatial Divergence = "<<(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE) -
+                                                              get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2[j],BEAMXp_CRYSTAL2[j],ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE))*1e3<<" [mm]"<<endl;
                 }
             };
             gr_BEAMX_DEFLECTED_CRY2_ITERATOR++;
@@ -472,15 +475,17 @@ void function_3()
     vector<Double_t> BEAMX_DEFLECTED_CRY3_PCRA; // Plus Critical Angle
     vector<Double_t> S_DEFLECTED_CRY3;
 
-    Double_t S_CRYSTAL2, S_CRYSTAL3, S_LHC_COLL, S_RP1_INT, S_RP0_INT;
-    Double_t BEAMX_CRYSTAL2, MUX_CRYSTAL2, BETAX_CRYSTAL2, BEAMX_CRYSTAL3, BEAMX_CRYSTAL3_MCRA, BEAMX_CRYSTAL3_PCRA, MUX_CRYSTAL3, BETAX_CRYSTAL3;
-    Int_t I_CRYSTAL2, I_CRYSTAL3, I_LHC_COLL, I_RP1_INT, I_RP0_INT;
+    Double_t S_CRYSTAL2, S_CRYSTAL3, S_LHC_COLL, S_RP1_INT, S_RP0_INT, S_RP3_INT;
+    Double_t BEAMX_CRYSTAL2, BEAMXp_CRYSTAL2, MUX_CRYSTAL2, BETAX_CRYSTAL2, ALFX_CRYSTAL2;
+    Double_t BEAMX_CRYSTAL3, BEAMXp_CRYSTAL3, BEAMX_CRYSTAL3_MCRA, BEAMXp_CRYSTAL3_MCRA, BEAMX_CRYSTAL3_PCRA;
+    Double_t BEAMXp_CRYSTAL3_PCRA, MUX_CRYSTAL3, BETAX_CRYSTAL3, ALFX_CRYSTAL3;
+    Int_t I_CRYSTAL2, I_CRYSTAL3, I_LHC_COLL, I_RP1_INT, I_RP0_INT, I_RP3_INT;
     Int_t ITERATOR = 0;
 
     const Double_t EMITTANCE = 3.7e-9;
     const Double_t S_MIN = 5120;
     const Double_t S_MAX = 5310;
-    const Double_t BEAMX_MIN = -0.040*1e3;
+    const Double_t BEAMX_MIN = -2.050*1e3;
     const Double_t BEAMX_MAX =  0.010*1e3;
     const Double_t CRYSTAL2_DEFL = -300.0e-6;
     const Double_t CRYSTAL3_DEFL = -15000.0e-6;
@@ -505,7 +510,11 @@ void function_3()
             I_CRYSTAL2 = ITERATOR;
             MUX_CRYSTAL2 = _MUX;
             BETAX_CRYSTAL2 = _BETX;
+            ALFX_CRYSTAL2 = _ALFX;
+
             BEAMX_CRYSTAL2 = _X-sigmax_coef*4.0*TMath::Sqrt(EMITTANCE*_BETX);
+            BEAMXp_CRYSTAL2 = (-1.0)*(_ALFX/_BETX)*BEAMX_CRYSTAL2;
+
             CRYSTAL2_CH_STATUS = true;
         }
         if(name.find("CRY3.51799.UA9") == 1)
@@ -514,15 +523,22 @@ void function_3()
             I_CRYSTAL3 = ITERATOR;
             MUX_CRYSTAL3 = _MUX;
             BETAX_CRYSTAL3 = _BETX;
-            BEAMX_CRYSTAL3 = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL);
-            BEAMX_CRYSTAL3_MCRA = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE);
-            BEAMX_CRYSTAL3_PCRA = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE);
+            ALFX_CRYSTAL3 = _ALFX;
+
+            BEAMX_CRYSTAL3 = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL);
+            BEAMX_CRYSTAL3_MCRA = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE);
+            BEAMX_CRYSTAL3_PCRA = get_beam_position(BETAX_CRYSTAL2,BETAX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE);
+
+            BEAMXp_CRYSTAL3 = get_beam_angle(BETAX_CRYSTAL2,BETAX_CRYSTAL3,ALFX_CRYSTAL2,ALFX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL);
+            BEAMXp_CRYSTAL3_MCRA = get_beam_angle(BETAX_CRYSTAL2,BETAX_CRYSTAL3,ALFX_CRYSTAL2,ALFX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE);
+            BEAMXp_CRYSTAL3_PCRA = get_beam_angle(BETAX_CRYSTAL2,BETAX_CRYSTAL3,ALFX_CRYSTAL2,ALFX_CRYSTAL3,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,MUX_CRYSTAL2,MUX_CRYSTAL3,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE);
 
             cout<<endl<<"--> Beam size on the CRYSTAL3 <--"<<endl;
             cout<<BEAMX_CRYSTAL3_PCRA-BEAMX_CRYSTAL3_MCRA<<" [m]"<<endl;
-            cout<<(BEAMX_CRYSTAL3_PCRA-BEAMX_CRYSTAL3_MCRA)*_ALFX/_BETX<<" [rad]"<<endl;
+            cout<<BEAMXp_CRYSTAL3_PCRA-BEAMXp_CRYSTAL3_MCRA<<" [rad]"<<endl;
+
             cout<<"--> Beam position X on the CRYSTAL3: "<<BEAMX_CRYSTAL3<<" [m]"<<endl;
-            cout<<"--> Beam angle X on the CRYSTAL3: "<<(-1.0)*BEAMX_CRYSTAL3*_ALFX/_BETX<<" [rad]"<<endl;
+            cout<<"--> Beam angle X on the CRYSTAL3: "<<BEAMXp_CRYSTAL3<<" [rad]"<<endl;
 
             CRYSTAL3_CH_STATUS = true;
         }
@@ -540,6 +556,11 @@ void function_3()
         {
             S_RP1_INT = _S;
             I_RP1_INT = ITERATOR;
+        }
+        if(name.find("XRPH.52202.UA9") == 1)
+        {
+            S_RP3_INT = _S;
+            I_RP3_INT = ITERATOR;
         }
 
         S.push_back(_S);
@@ -561,17 +582,20 @@ void function_3()
         if(CRYSTAL2_CH_STATUS)
         {
             S_DEFLECTED_CRY2.push_back(_S);
-            BEAMX_DEFLECTED_CRY2.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
-            BEAMX_DEFLECTED_CRY2_MCRA.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
-            BEAMX_DEFLECTED_CRY2_PCRA.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+            BEAMX_DEFLECTED_CRY2.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL)*1e3);
+            BEAMX_DEFLECTED_CRY2_MCRA.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
+            BEAMX_DEFLECTED_CRY2_PCRA.push_back(get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+//            printf("%10.15f , %10.15f\n",get_beam_position(BETAX_CRYSTAL2,_BETX,BEAMX_CRYSTAL2,BEAMXp_CRYSTAL2,ALFX_CRYSTAL2,MUX_CRYSTAL2,_MUX,CRYSTAL2_DEFL),_S);
         }
         if(CRYSTAL3_CH_STATUS)
         {
             S_DEFLECTED_CRY3.push_back(_S);
-            BEAMX_DEFLECTED_CRY3.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL)*1e3);
-            BEAMX_DEFLECTED_CRY3_MCRA.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3_MCRA,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
-            BEAMX_DEFLECTED_CRY3_PCRA.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3_PCRA,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
-            printf("%10.15f , %10.15f\n",get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL),_S);
+            BEAMX_DEFLECTED_CRY3.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3,BEAMXp_CRYSTAL3,ALFX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL)*1e3);
+            BEAMX_DEFLECTED_CRY3_MCRA.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3_MCRA,BEAMXp_CRYSTAL3_MCRA,ALFX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL-CRYSTAL_CRITICAL_ANGLE)*1e3);
+            BEAMX_DEFLECTED_CRY3_PCRA.push_back(get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3_PCRA,BEAMXp_CRYSTAL3_PCRA,ALFX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL+CRYSTAL_CRITICAL_ANGLE)*1e3);
+//            printf("%10.15f , %10.15f\n",get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3,BEAMXp_CRYSTAL3,ALFX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL),_S);
+            printf("%10.15f,\n",get_beam_position(BETAX_CRYSTAL3,_BETX,BEAMX_CRYSTAL3,BEAMXp_CRYSTAL3,ALFX_CRYSTAL3,MUX_CRYSTAL3,_MUX,CRYSTAL3_DEFL));
+//            printf("%10.15f,\n",_S);
         }
 
         ITERATOR++;
@@ -732,6 +756,10 @@ void function_3()
     RP1_INT_linex->SetLineColor(kGray+1);
     RP1_INT_linex->SetLineWidth(2);
 
+    TLine* RP3_INT_linex = new TLine(S_RP3_INT,BEAMX_MIN,S_RP3_INT,BEAMX_C4SIGMA_BOT[I_RP3_INT]);
+    RP3_INT_linex->SetLineColor(kGray+2);
+    RP3_INT_linex->SetLineWidth(2);
+
     mg_beamx->Add(gr_beamx_1s_top);
     mg_beamx->Add(gr_beamx_1s_bot);
     mg_beamx->Add(gr_beamx_4s_top);
@@ -751,6 +779,7 @@ void function_3()
     LHC_COLL_linex->Draw("same");
     RP0_INT_linex->Draw("same");
     RP1_INT_linex->Draw("same");
+    RP3_INT_linex->Draw("same");
 
     mg_beamx->GetXaxis()->SetTitle("s [m]");
     mg_beamx->GetYaxis()->SetTitle("x [mm]");
@@ -762,14 +791,17 @@ void function_3()
     fChain->Delete();
 }
 
-Double_t get_beam_position(Double_t b1, Double_t b2, Double_t x1, Double_t m1, Double_t m2, Double_t theta)
+Double_t get_beam_position(Double_t b1, Double_t b2, Double_t x1, Double_t x1p, Double_t a1, Double_t m1, Double_t m2, Double_t theta)
 {
-    return (TMath::Sqrt(b2/b1)*TMath::Cos((m2-m1)*TMath::TwoPi())*x1+
-            theta*TMath::Sqrt(b2*b1)*TMath::Sin((m2-m1)*TMath::TwoPi()));
+    return (TMath::Sqrt(b2/b1)*(TMath::Cos((m2-m1)*TMath::TwoPi()) + a1*TMath::Sin((m2-m1)*TMath::TwoPi()))*x1+
+            TMath::Sqrt(b2*b1)*TMath::Sin((m2-m1)*TMath::TwoPi())*(x1p + theta));
 }
 
-Double_t get_beam_angle(Double_t b1, Double_t b2, Double_t a2, Double_t x1, Double_t m1, Double_t m2, Double_t theta)
+Double_t get_beam_angle(Double_t b1, Double_t b2, Double_t a1, Double_t a2, Double_t x1, Double_t x1p, Double_t m1, Double_t m2, Double_t theta)
 {
-    return (TMath::Sqrt(b1/b2)(theta*(TMath::Cos((m2-m1)*TMath::TwoPi()) - a2*TMath::Sin((m2-m1)*TMath::TwoPi())) -
-                               x1*((1.0/b1)*TMath::Sin((m2-m1)*TMath::TwoPi()) + (a2/b1)*TMath::Cos((m2-m1)*TMath::TwoPi()))));
+    return (((-1.0)*(1.0+a1*a2)*TMath::Sin((m2-m1)*TMath::TwoPi())/TMath::Sqrt(b2*b1)+(a1-a2)*TMath::Cos((m2-m1)*TMath::TwoPi())/TMath::Sqrt(b2*b1))*x1+
+            TMath::Sqrt(b1/b2)*(TMath::Cos((m2-m1)*TMath::TwoPi())-a2*TMath::Sin((m2-m1)*TMath::TwoPi()))*(x1p + theta));
+
+    /*return (TMath::Sqrt(b1/b2)(theta*(TMath::Cos((m2-m1)*TMath::TwoPi()) - a2*TMath::Sin((m2-m1)*TMath::TwoPi())) -
+                               x1*((1.0/b1)*TMath::Sin((m2-m1)*TMath::TwoPi()) + (a2/b1)*TMath::Cos((m2-m1)*TMath::TwoPi()))));*/
 }
