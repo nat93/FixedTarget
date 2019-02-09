@@ -1,0 +1,23 @@
+#Main:numberOfEvents         = 1000  ! number of events to generate
+
+Main:numberToList           = 1     ! number of events to print
+Main:timesToShow            = 20    ! show how far along run is this many times
+Main:timesAllowErrors       = 10000 ! abort run after this many flawed events
+Main:showChangedSettings    = on    ! print changed flags/modes/parameters
+Main:showAllStatistics      = on    ! more statistics on multiple interactions
+
+SigmaProcess:renormScale2   = 3
+SigmaProcess:factorScale2   = 3
+SigmaProcess:renormMultFac  = 2     ! 2mT
+SigmaProcess:factorMultFac  = 2     ! 2mT
+StringFlav:mesonCvector     = 1.5
+StringFlav:mesonBvector     = 3
+
+HardQCD:hardccbar           = on    ! heavy flavour subset qqbartoccbar and ggtoccbar
+
+4122:onMode                 = off   ! no decay allowed for lambda_c+
+
+#4122:onIfAny                = 2212 -321 211 ! Lambda_c+ decay to p + K- + pi+
+
+#4122:onIfAny                = 3122 211  ! Lambda_c+ decay to Lambda_0 + pi+
+#3122:onIfAny                = 2212 -211 ! Lambda_0 decay to p + pi-

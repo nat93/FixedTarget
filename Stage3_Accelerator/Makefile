@@ -27,11 +27,14 @@ OUTLIB	      = ./obj/
 
 all: accelerator
 
-accelerator: accelerator.cc obj/mag.o obj/mag.o
-	$(CXX) $(CXXFLAGS) -o accelerator $(OUTLIB)/*.o $(GLIBS) $<
+accelerator: accelerator.cc obj/mag.o obj/dec.o
+	$(CXX) $(CXXFLAGS) -o accelerator $(OUTLIB)*.o $(GLIBS) $<
 
 obj/mag.o: src/MagClass.C src/MagClass.h 
 	$(CXX) $(CXXFLAGS) -c -I. -o $(OUTLIB)mag.o $<
+
+obj/dec.o: src/DecayClass.C src/DecayClass.h 
+	$(CXX) $(CXXFLAGS) -c -I. -o $(OUTLIB)dec.o $<
 
 clean:
 	rm -f accelerator

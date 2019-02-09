@@ -1,5 +1,6 @@
 //my
 #include "./src/MagClass.h"
+#include "./src/DecayClass.h"
 #include "src/Constants.h"
 
 // C++
@@ -67,9 +68,11 @@ using namespace std;
 void function_1(TString output_file_name);
 void function_2(TString input_filedir_name, TString output_file_name);
 void function_3(TString output_file_name);
+void function_4(TString output_file_name);
+void function_5(TString output_file_name);
 
 Bool_t isChanneled(Double_t particleAngleOut);
-void passMagnets(Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph* gr_x, TGraph* gr_y, Bool_t print);
+void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph* gr_x, TGraph* gr_y, Bool_t print);
 
 Int_t main(int argc, char* argv[])
 {
@@ -86,6 +89,12 @@ Int_t main(int argc, char* argv[])
         case 3:
           function_3(argv[2]);
           break;
+        case 4:
+          function_4(argv[2]);
+          break;
+        case 5:
+          function_5(argv[2]);
+          break;
         default:
           cout<<"--> Nothing to do =)"<<endl;
           break;
@@ -97,6 +106,8 @@ Int_t main(int argc, char* argv[])
         cout<<"--> 1 -- function_1() : single proton trajectory (-200 urad deflection)"<<endl;
         cout<<"--> 2 -- function_2() : Lc products trajectories"<<endl;
         cout<<"--> 3 -- function_3() : for random parameters"<<endl;
+        cout<<"--> 4 -- function_4() : Lc products trajectories (random three-body decay)"<<endl;
+        cout<<"--> 5 -- function_5() : Lc products trajectories (random two-body decay)"<<endl;
         cout<<endl;
         cout<<"--> ERROR:: Wrong imput parameters number:"<<endl<<
               "--> [0] -- script name"<<endl<<
@@ -139,7 +150,7 @@ void function_1(TString output_file_name)
     TGraph* gr_y = new TGraph();
     gr_y->SetName("gr_y");
 
-    passMagnets(coord_x0,coord_x,p,Charge_C,gr_x,gr_y,true);
+    passMagnets(0,coord_x0,coord_x,p,Charge_C,gr_x,gr_y,true);
 
     TFile* _file = new TFile(output_file_name.Data(),"RECREATE");
     gr_x->Write();
@@ -403,7 +414,7 @@ void function_2(TString input_filedir_name, TString output_file_name)
                     gr_proton_x->SetName(gr_proton_x_name.Data());
                     gr_proton_y->SetName(gr_proton_y_name.Data());
 
-                    passMagnets(coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,false);
+                    passMagnets(0,coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,false);
 
                     TGraph* gr_kaon_x = new TGraph();
                     TGraph* gr_kaon_y = new TGraph();
@@ -414,7 +425,7 @@ void function_2(TString input_filedir_name, TString output_file_name)
                     gr_kaon_x->SetName(gr_kaon_x_name.Data());
                     gr_kaon_y->SetName(gr_kaon_y_name.Data());
 
-                    passMagnets(coord_x0_kaon,coord_x_kaon,p_kaon,charge_kaon,gr_kaon_x,gr_kaon_y,false);
+                    passMagnets(0,coord_x0_kaon,coord_x_kaon,p_kaon,charge_kaon,gr_kaon_x,gr_kaon_y,false);
 
                     TGraph* gr_pion_x = new TGraph();
                     TGraph* gr_pion_y = new TGraph();
@@ -425,7 +436,7 @@ void function_2(TString input_filedir_name, TString output_file_name)
                     gr_pion_x->SetName(gr_pion_x_name.Data());
                     gr_pion_y->SetName(gr_pion_y_name.Data());
 
-                    passMagnets(coord_x0_pion,coord_x_pion,p_pion,charge_pion,gr_pion_x,gr_pion_y,false);
+                    passMagnets(0,coord_x0_pion,coord_x_pion,p_pion,charge_pion,gr_pion_x,gr_pion_y,false);
 
                     nRuns++;
 
@@ -524,7 +535,7 @@ void function_3(TString output_file_name)
             /*dp*/    coord_x0[5] = 0.0;
             TGraph* gr_x = new TGraph();
             TGraph* gr_y = new TGraph();
-            passMagnets(coord_x0,coord_x,p,Charge_C,gr_x,gr_y,false);
+            passMagnets(0,coord_x0,coord_x,p,Charge_C,gr_x,gr_y,false);
 
             h_rp1_x->Fill(p,a,gr_x->Eval(Constants::_xrph_51937_ua9_pos));
             h_rp3_x->Fill(p,a,gr_x->Eval(Constants::_xrph_52202_ua9_pos));
@@ -542,6 +553,400 @@ void function_3(TString output_file_name)
     cout<<"--> Output file: "<<output_file_name<<endl;
 }
 
+void function_4(TString output_file_name)
+{
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+
+    //-----------------------------------------//
+    // Decay section
+    //-----------------------------------------//
+    DecayClass* decay = new DecayClass();
+    //-----------------------------------------//
+
+    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+    Double_t* coord_x0_proton          = new Double_t[mtrx_size];
+    Double_t* coord_x_proton           = new Double_t[mtrx_size];
+
+    Double_t p_kaon = -999, charge_kaon = -999, theta_x_kaon = -999, theta_y_kaon = -999;
+    Double_t* coord_x0_kaon          = new Double_t[mtrx_size];
+    Double_t* coord_x_kaon           = new Double_t[mtrx_size];
+
+    Double_t p_pion = -999, charge_pion = -999, theta_x_pion = -999, theta_y_pion = -999;
+    Double_t* coord_x0_pion          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion           = new Double_t[mtrx_size];
+
+    Int_t nRuns = 0;
+    const Int_t nLc = 200;// number of decayed Lc
+
+    TLorentzVector pProd[4];
+    Double_t mProd[4];
+    Double_t s_decay = 0;
+
+    // Mass
+    mProd[0] = 2.28646; // Lc       [GeV/c2]
+    mProd[1] = 0.93827; // Proton   [GeV/c2]
+    mProd[2] = 0.49368; // Kaon     [GeV/c2]
+    mProd[3] = 0.13957; // Pion     [GeV/c2]
+
+    TFile* _file = new TFile(output_file_name.Data(),"RECREATE");
+
+    TH2D* h_3 = new TH2D("h_3","XY proton on RP1",1000,-10,10,1000,-10,10);
+    TH2D* h_4 = new TH2D("h_4","XY kaon on RP1",1000,-10,10,1000,-10,10);
+    TH2D* h_5 = new TH2D("h_5","XY pion on RP1",1000,-10,10,1000,-10,10);
+    TH2D* h_6 = new TH2D("h_6","XY proton on RP3",1000,-10,10,1000,-10,10);
+    TH2D* h_7 = new TH2D("h_7","XY kaon on RP3",1000,-10,10,1000,-10,10);
+    TH2D* h_8 = new TH2D("h_8","XY pion on RP3",1000,-10,10,1000,-10,10);
+    TH1D* h_9 = new TH1D("h_9","proton momentum [GeV/c]",330,-30.0,300.0);
+    TH1D* h_10 = new TH1D("h_10","kaon momentum [GeV/c]",330,-30.0,300.0);
+    TH1D* h_11 = new TH1D("h_11","pion momentum [GeV/c]",330,-30.0,300.0);
+    TH1D* h_12 = new TH1D("h_12","proton angle",4000000,-4.0,4.0);
+    TH1D* h_13 = new TH1D("h_13","kaon angle",4000000,-4.0,4.0);
+    TH1D* h_14 = new TH1D("h_14","pion angle",4000000,-4.0,4.0);
+
+    for(Int_t i = 0; i < nLc; i++)
+    {
+        Double_t pLc = 250.0; // [GeV/c]
+        Double_t eLc = TMath::Sqrt(pLc*pLc + mProd[0]*mProd[0]); // [GeV]
+
+        pProd[0].SetPxPyPzE(0,0,pLc,eLc);
+
+        if(decay->threeBody(pProd,mProd))
+        {
+            //--------------------//
+            // Proton
+            //--------------------//
+
+            p_proton = pProd[1].P();
+//            cout<<"p_proton = "<<p_proton<<endl;
+            theta_x_proton = TMath::ATan(pProd[1].Px()/pProd[1].Pz());
+            theta_y_proton = TMath::ATan(pProd[1].Py()/pProd[1].Pz());
+            charge_proton = 1.0;
+            /*x*/     coord_x0_proton[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+            /*x'*/    coord_x0_proton[1] = Constants::_beamAngleInitialAtCryPosition + Constants::_crystalAngle + theta_x_proton;// [rad]
+            /*y*/     coord_x0_proton[2] = 0.0;             // [m]
+            /*y'*/    coord_x0_proton[3] = theta_y_proton;  // [rad]
+            /*l*/     coord_x0_proton[4] = 0.0;
+            /*dp*/    coord_x0_proton[5] = 0.0;
+
+            //--------------------//
+            // Kaon
+            //--------------------//
+
+            p_kaon = pProd[2].P();
+//            cout<<"p_kaon = "<<p_kaon<<endl;
+            theta_x_kaon = TMath::ATan(pProd[2].Px()/pProd[2].Pz());
+            theta_y_kaon = TMath::ATan(pProd[2].Py()/pProd[2].Pz());
+            charge_kaon = -1.0;
+            /*x*/     coord_x0_kaon[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+            /*x'*/    coord_x0_kaon[1] = Constants::_beamAngleInitialAtCryPosition + Constants::_crystalAngle + theta_x_kaon;// [rad]
+            /*y*/     coord_x0_kaon[2] = 0.0;           // [m]
+            /*y'*/    coord_x0_kaon[3] = theta_y_kaon;  // [rad]
+            /*l*/     coord_x0_kaon[4] = 0.0;
+            /*dp*/    coord_x0_kaon[5] = 0.0;
+
+            //--------------------//
+            // Pion
+            //--------------------//
+
+            p_pion = pProd[3].P();
+//            cout<<"p_pion = "<<p_pion<<endl;
+            theta_x_pion = TMath::ATan(pProd[3].Px()/pProd[3].Pz());
+            theta_y_pion = TMath::ATan(pProd[3].Py()/pProd[3].Pz());
+            charge_pion = 1.0;
+            /*x*/     coord_x0_pion[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+            /*x'*/    coord_x0_pion[1] = Constants::_beamAngleInitialAtCryPosition + Constants::_crystalAngle + theta_x_pion;// [rad]
+            /*y*/     coord_x0_pion[2] = 0.0;           // [m]
+            /*y'*/    coord_x0_pion[3] = theta_y_pion;  // [rad]
+            /*l*/     coord_x0_pion[4] = 0.0;
+            /*dp*/    coord_x0_pion[5] = 0.0;
+
+            //--------------------//
+            // Magnets
+            //--------------------//
+
+            h_9->Fill(p_proton);
+            h_10->Fill(p_kaon);
+            h_11->Fill(p_pion);
+            h_12->Fill(theta_x_proton);
+            h_13->Fill(theta_x_kaon);
+            h_14->Fill(theta_x_pion);
+
+            TGraph* gr_proton_x = new TGraph();
+            TGraph* gr_proton_y = new TGraph();
+            TString gr_proton_x_name = "gr_proton_x_";
+            TString gr_proton_y_name = "gr_proton_y_";
+            gr_proton_x_name += nRuns;
+            gr_proton_y_name += nRuns;
+            gr_proton_x->SetName(gr_proton_x_name.Data());
+            gr_proton_y->SetName(gr_proton_y_name.Data());
+
+            passMagnets(s_decay,coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,false);
+
+            TGraph* gr_kaon_x = new TGraph();
+            TGraph* gr_kaon_y = new TGraph();
+            TString gr_kaon_x_name = "gr_kaon_x_";
+            TString gr_kaon_y_name = "gr_kaon_y_";
+            gr_kaon_x_name += nRuns;
+            gr_kaon_y_name += nRuns;
+            gr_kaon_x->SetName(gr_kaon_x_name.Data());
+            gr_kaon_y->SetName(gr_kaon_y_name.Data());
+
+            passMagnets(s_decay,coord_x0_kaon,coord_x_kaon,p_kaon,charge_kaon,gr_kaon_x,gr_kaon_y,false);
+
+            TGraph* gr_pion_x = new TGraph();
+            TGraph* gr_pion_y = new TGraph();
+            TString gr_pion_x_name = "gr_pion_x_";
+            TString gr_pion_y_name = "gr_pion_y_";
+            gr_pion_x_name += nRuns;
+            gr_pion_y_name += nRuns;
+            gr_pion_x->SetName(gr_pion_x_name.Data());
+            gr_pion_y->SetName(gr_pion_y_name.Data());
+
+            passMagnets(s_decay,coord_x0_pion,coord_x_pion,p_pion,charge_pion,gr_pion_x,gr_pion_y,false);
+
+            nRuns++;
+
+            gr_proton_x->Write();
+            gr_proton_y->Write();
+            gr_kaon_x->Write();
+            gr_kaon_y->Write();
+            gr_pion_x->Write();
+            gr_pion_y->Write();
+
+            h_3->Fill(gr_proton_x->Eval(Constants::_xrph_51937_ua9_pos),gr_proton_y->Eval(Constants::_xrph_51937_ua9_pos));
+            h_4->Fill(gr_kaon_x->Eval(Constants::_xrph_51937_ua9_pos),gr_kaon_y->Eval(Constants::_xrph_51937_ua9_pos));
+            h_5->Fill(gr_pion_x->Eval(Constants::_xrph_51937_ua9_pos),gr_pion_y->Eval(Constants::_xrph_51937_ua9_pos));
+            h_6->Fill(gr_proton_x->Eval(Constants::_xrph_52202_ua9_pos),gr_proton_y->Eval(Constants::_xrph_52202_ua9_pos));
+            h_7->Fill(gr_kaon_x->Eval(Constants::_xrph_52202_ua9_pos),gr_kaon_y->Eval(Constants::_xrph_52202_ua9_pos));
+            h_8->Fill(gr_pion_x->Eval(Constants::_xrph_52202_ua9_pos),gr_pion_y->Eval(Constants::_xrph_52202_ua9_pos));
+
+            gr_proton_x->Delete();
+            gr_proton_y->Delete();
+            gr_kaon_x->Delete();
+            gr_kaon_y->Delete();
+            gr_pion_x->Delete();
+            gr_pion_y->Delete();
+        }
+    }
+
+    cout<<endl;
+    cout<<"--> nRuns = "<<nRuns<<endl;
+
+    h_3->Write();
+    h_4->Write();
+    h_5->Write();
+    h_6->Write();
+    h_7->Write();
+    h_8->Write();
+    h_9->Write();
+    h_10->Write();
+    h_11->Write();
+    h_12->Write();
+    h_13->Write();
+    h_14->Write();
+    _file->Close();
+
+    cout<<"--> Output file: "<<output_file_name<<endl;
+}
+
+void function_5(TString output_file_name)
+{
+//    //-----------------------------------------//
+//    // Magnets section
+//    //-----------------------------------------//
+
+//    MagClass* magnet = new MagClass();
+//    const Int_t mtrx_size = magnet->_mtrx_size;
+
+//    //-----------------------------------------//
+//    // Decay section
+//    //-----------------------------------------//
+//    DecayClass* decay = new DecayClass();
+//    //-----------------------------------------//
+
+//    Double_t p_lambda0 = -999, charge_lambda0 = -999, theta_x_lambda0 = -999, theta_y_lambda0 = -999;
+//    Double_t* coord_x0_lambda0          = new Double_t[mtrx_size];
+//    Double_t* coord_x_lambda0           = new Double_t[mtrx_size];
+
+//    Double_t p_pion_p = -999, charge_pion_p = -999, theta_x_pion_p = -999, theta_y_pion_p = -999;
+//    Double_t* coord_x0_pion_p          = new Double_t[mtrx_size];
+//    Double_t* coord_x_pion_p           = new Double_t[mtrx_size];
+
+//    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+//    Double_t* coord_x0_proton          = new Double_t[mtrx_size];
+//    Double_t* coord_x_proton           = new Double_t[mtrx_size];
+
+//    Double_t p_pion_m = -999, charge_pion_m = -999, theta_x_pion_m = -999, theta_y_pion_m = -999;
+//    Double_t* coord_x0_pion_m          = new Double_t[mtrx_size];
+//    Double_t* coord_x_pion_m           = new Double_t[mtrx_size];
+
+//    Int_t nRuns = 0;
+//    const Int_t nLc = 200;// number of decayed Lc
+
+//    TLorentzVector pProd_1[3];
+//    TLorentzVector pProd_2[3];
+//    Double_t mProd_1[3];
+//    Double_t mProd_2[3];
+
+//    // Mass
+//    mProd_1[0] = 2.28646; // Lc+    [GeV/c2]
+//    mProd_1[1] = 1.11568; // L0     [GeV/c2]
+//    mProd_1[2] = 0.13957; // Pion+  [GeV/c2]
+
+//    mProd_2[0] = 1.11568; // L0     [GeV/c2]
+//    mProd_2[1] = 0.13957; // Pion-  [GeV/c2]
+//    mProd_2[2] = 0.93827; // Proton [GeV/c2]
+
+//    TFile* _file = new TFile(output_file_name.Data(),"RECREATE");
+
+//    TH2D* h_3 = new TH2D("h_3","XY proton on RP1",1000,-10,10,1000,-10,10);
+//    TH2D* h_4 = new TH2D("h_4","XY kaon on RP1",1000,-10,10,1000,-10,10);
+//    TH2D* h_5 = new TH2D("h_5","XY pion on RP1",1000,-10,10,1000,-10,10);
+//    TH2D* h_6 = new TH2D("h_6","XY proton on RP3",1000,-10,10,1000,-10,10);
+//    TH2D* h_7 = new TH2D("h_7","XY kaon on RP3",1000,-10,10,1000,-10,10);
+//    TH2D* h_8 = new TH2D("h_8","XY pion on RP3",1000,-10,10,1000,-10,10);
+//    TH1D* h_9 = new TH1D("h_9","proton momentum [GeV/c]",330,-30.0,300.0);
+//    TH1D* h_10 = new TH1D("h_10","kaon momentum [GeV/c]",330,-30.0,300.0);
+//    TH1D* h_11 = new TH1D("h_11","pion momentum [GeV/c]",330,-30.0,300.0);
+//    TH1D* h_12 = new TH1D("h_12","proton angle",4000000,-4.0,4.0);
+//    TH1D* h_13 = new TH1D("h_13","kaon angle",4000000,-4.0,4.0);
+//    TH1D* h_14 = new TH1D("h_14","pion angle",4000000,-4.0,4.0);
+
+//    for(Int_t i = 0; i < nLc; i++)
+//    {
+//        Double_t pLc = 250.0; // [GeV/c]
+//        Double_t eLc = TMath::Sqrt(pLc*pLc + mProd_1[0]*mProd_1[0]); // [GeV]
+
+//        pProd_1[0].SetPxPyPzE(0,0,pLc,eLc);
+
+//        if(decay->twoBody(pProd_1,mProd_1))
+//        {
+//            //--------------------//
+//            // Lambda0
+//            //--------------------//
+
+//            p_lambda0 = pProd_1[1].P();
+////            cout<<"p_lambda0 = "<<p_lambda0<<endl;
+//            theta_x_lambda0 = TMath::ATan(pProd_1[1].Px()/pProd_1[1].Pz());
+//            theta_y_lambda0 = TMath::ATan(pProd_1[1].Py()/pProd_1[1].Pz());
+//            charge_lambda0 = 0.0;
+//            /*x*/     coord_x0_lambda0[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+//            /*x'*/    coord_x0_lambda0[1] = Constants::_beamAngleInitialAtCryPosition + Constants::_crystalAngle + theta_x_lambda0;// [rad]
+//            /*y*/     coord_x0_lambda0[2] = 0.0;              // [m]
+//            /*y'*/    coord_x0_lambda0[3] = theta_y_lambda0;  // [rad]
+//            /*l*/     coord_x0_lambda0[4] = 0.0;
+//            /*dp*/    coord_x0_lambda0[5] = 0.0;
+
+//            //--------------------//
+//            // Pion+
+//            //--------------------//
+
+//            p_pion_p = pProd[2].P();
+////            cout<<"p_pion_p = "<<p_pion_p<<endl;
+//            theta_x_pion_p = TMath::ATan(pProd_1[2].Px()/pProd_1[2].Pz());
+//            theta_y_pion_p = TMath::ATan(pProd_1[2].Py()/pProd_1[2].Pz());
+//            charge_pion_p = 1.0;
+//            /*x*/     coord_x0_pion_p[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+//            /*x'*/    coord_x0_pion_p[1] = Constants::_beamAngleInitialAtCryPosition + Constants::_crystalAngle + theta_x_pion_p;// [rad]
+//            /*y*/     coord_x0_pion_p[2] = 0.0;           // [m]
+//            /*y'*/    coord_x0_pion_p[3] = theta_y_pion_p;  // [rad]
+//            /*l*/     coord_x0_pion_p[4] = 0.0;
+//            /*dp*/    coord_x0_pion_p[5] = 0.0;
+
+//            //--------------------//
+//            // Magnets
+//            //--------------------//
+
+//            h_9->Fill(p_proton);
+//            h_10->Fill(p_kaon);
+//            h_11->Fill(p_pion);
+//            h_12->Fill(theta_x_proton);
+//            h_13->Fill(theta_x_kaon);
+//            h_14->Fill(theta_x_pion);
+
+//            TGraph* gr_proton_x = new TGraph();
+//            TGraph* gr_proton_y = new TGraph();
+//            TString gr_proton_x_name = "gr_proton_x_";
+//            TString gr_proton_y_name = "gr_proton_y_";
+//            gr_proton_x_name += nRuns;
+//            gr_proton_y_name += nRuns;
+//            gr_proton_x->SetName(gr_proton_x_name.Data());
+//            gr_proton_y->SetName(gr_proton_y_name.Data());
+
+//            passMagnets(0,coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,false);
+
+//            TGraph* gr_kaon_x = new TGraph();
+//            TGraph* gr_kaon_y = new TGraph();
+//            TString gr_kaon_x_name = "gr_kaon_x_";
+//            TString gr_kaon_y_name = "gr_kaon_y_";
+//            gr_kaon_x_name += nRuns;
+//            gr_kaon_y_name += nRuns;
+//            gr_kaon_x->SetName(gr_kaon_x_name.Data());
+//            gr_kaon_y->SetName(gr_kaon_y_name.Data());
+
+//            passMagnets(0,coord_x0_kaon,coord_x_kaon,p_kaon,charge_kaon,gr_kaon_x,gr_kaon_y,false);
+
+//            TGraph* gr_pion_x = new TGraph();
+//            TGraph* gr_pion_y = new TGraph();
+//            TString gr_pion_x_name = "gr_pion_x_";
+//            TString gr_pion_y_name = "gr_pion_y_";
+//            gr_pion_x_name += nRuns;
+//            gr_pion_y_name += nRuns;
+//            gr_pion_x->SetName(gr_pion_x_name.Data());
+//            gr_pion_y->SetName(gr_pion_y_name.Data());
+
+//            passMagnets(0,coord_x0_pion,coord_x_pion,p_pion,charge_pion,gr_pion_x,gr_pion_y,false);
+
+//            nRuns++;
+
+//            gr_proton_x->Write();
+//            gr_proton_y->Write();
+//            gr_kaon_x->Write();
+//            gr_kaon_y->Write();
+//            gr_pion_x->Write();
+//            gr_pion_y->Write();
+
+//            h_3->Fill(gr_proton_x->Eval(Constants::_xrph_51937_ua9_pos),gr_proton_y->Eval(Constants::_xrph_51937_ua9_pos));
+//            h_4->Fill(gr_kaon_x->Eval(Constants::_xrph_51937_ua9_pos),gr_kaon_y->Eval(Constants::_xrph_51937_ua9_pos));
+//            h_5->Fill(gr_pion_x->Eval(Constants::_xrph_51937_ua9_pos),gr_pion_y->Eval(Constants::_xrph_51937_ua9_pos));
+//            h_6->Fill(gr_proton_x->Eval(Constants::_xrph_52202_ua9_pos),gr_proton_y->Eval(Constants::_xrph_52202_ua9_pos));
+//            h_7->Fill(gr_kaon_x->Eval(Constants::_xrph_52202_ua9_pos),gr_kaon_y->Eval(Constants::_xrph_52202_ua9_pos));
+//            h_8->Fill(gr_pion_x->Eval(Constants::_xrph_52202_ua9_pos),gr_pion_y->Eval(Constants::_xrph_52202_ua9_pos));
+
+//            gr_proton_x->Delete();
+//            gr_proton_y->Delete();
+//            gr_kaon_x->Delete();
+//            gr_kaon_y->Delete();
+//            gr_pion_x->Delete();
+//            gr_pion_y->Delete();
+//        }
+//    }
+
+//    cout<<endl;
+//    cout<<"--> nRuns = "<<nRuns<<endl;
+
+//    h_3->Write();
+//    h_4->Write();
+//    h_5->Write();
+//    h_6->Write();
+//    h_7->Write();
+//    h_8->Write();
+//    h_9->Write();
+//    h_10->Write();
+//    h_11->Write();
+//    h_12->Write();
+//    h_13->Write();
+//    h_14->Write();
+//    _file->Close();
+
+//    cout<<"--> Output file: "<<output_file_name<<endl;
+}
+
 Bool_t isChanneled(Double_t particleAngleOut)
 {
     if(TMath::Abs(particleAngleOut) < TMath::Abs(Constants::_crystalAngle) + TMath::Abs(Constants::_channeledAngleRange))
@@ -555,7 +960,7 @@ Bool_t isChanneled(Double_t particleAngleOut)
     return false;
 }
 
-void passMagnets(Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph *gr_x, TGraph *gr_y, Bool_t print)
+void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph *gr_x, TGraph *gr_y, Bool_t print)
 {
     //-----------------------------------------//
     // Magnets section
@@ -603,187 +1008,458 @@ void passMagnets(Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Cha
     //-----------------------------------------//
 
     Int_t gr_x_ipoint = 0, gr_y_ipoint = 0;
-    // INITIAL
-    if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos);
-    gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos,coord_x0[0]);
-    gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos,coord_x0[2]);
-    gr_x_ipoint++;
-    gr_y_ipoint++;
+    Bool_t s_status = kFALSE;
+
+    if(!s_status && s <= 0)
+    {
+        // INITIAL
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos,coord_x0[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos,coord_x0[2]);
+        gr_x_ipoint++;
+        gr_y_ipoint++;
+
+        s_status = kTRUE;
+    }
 
     if(Constants::_switch_magnets && Charge_C != 0)
     {
-        // DRIFT1
-        if(!magnet->GetNewCoordDrift(DRIFTL1,order,coord_x0,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q1_51810_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL1 = Constants::_q1_51810_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT1-S
+            if(!magnet->GetNewCoordDrift(DRIFTL1,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // QUAD1: FOC in X, DEFOC in Y
-        if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ1,p,P0,QL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_q1_51810_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q1_51810_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_q1_51810_pos,coord_temp_2_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_q1_51810_pos,coord_temp_2_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT1
+            if(!magnet->GetNewCoordDrift(DRIFTL1,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // QUAD1: FOC in X, DEFOC in Y
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ1,p,P0,QL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q1_51810_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q1_51810_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q1_51810_pos,coord_temp_2_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q1_51810_pos,coord_temp_2_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q2_51910_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL2 = Constants::_q2_51910_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT2-S
+            if(!magnet->GetNewCoordDrift(DRIFTL2,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT2
-        if(!magnet->GetNewCoordDrift(DRIFTL2,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT2
+            if(!magnet->GetNewCoordDrift(DRIFTL2,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // QUAD2: FOC in Y, DEFOC in X
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ2,p,P0,QL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q2_51910_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q2_51910_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_xrph_51937_ua9_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL3 = Constants::_xrph_51937_ua9_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT3-S
+            if(!magnet->GetNewCoordDrift(DRIFTL3,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // QUAD2: FOC in Y, DEFOC in X
-        if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ2,p,P0,QL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_q2_51910_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q2_51910_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT3
+            if(!magnet->GetNewCoordDrift(DRIFTL3,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_xrph_51937_ua9_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_lsf_52005_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL4 = Constants::_lsf_52005_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT4-S
+            if(!magnet->GetNewCoordDrift(DRIFTL4,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT3
-        if(!magnet->GetNewCoordDrift(DRIFTL3,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_xrph_51937_ua9_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT4
+            if(!magnet->GetNewCoordDrift(DRIFTL4,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // SEXT1
+            if(!magnet->GetNewCoordSextupole(Charge_C*KS1,p,P0,SL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_lsf_52005_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_lsf_52005_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q3_52010_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL5 = Constants::_q3_52010_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT5-S
+            if(!magnet->GetNewCoordDrift(DRIFTL5,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT4
-        if(!magnet->GetNewCoordDrift(DRIFTL4,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT5
+            if(!magnet->GetNewCoordDrift(DRIFTL5,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // QUAD3: FOC in X, DEFOC in Y
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ3,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q3_52010_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q3_52010_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q3_52010_pos + DRIFTL6 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL6 = Constants::_q3_52010_pos + DRIFTL6 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT6-S
+            if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // SEXT1
-        if(!magnet->GetNewCoordSextupole(Charge_C*KS1,p,P0,SL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_lsf_52005_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_lsf_52005_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT6
+            if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // DIPOLE1: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mba_52030_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mba_52030_pos + DL/2 + DRIFTL7 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL7 = Constants::_mba_52030_pos + DL/2 + DRIFTL7 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT7
+            if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT5
-        if(!magnet->GetNewCoordDrift(DRIFTL5,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT7
+            if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52030_pos+DL/2+DRIFTL7);
+        }
+        if(s_status)
+        {
+            // DIPOLE2: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mba_52050_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mba_52050_pos + DL/2 + DRIFTL8 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL8 = Constants::_mba_52050_pos + DL/2 + DRIFTL8 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT8
+            if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // QUAD3: FOC in X, DEFOC in Y
-        if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ3,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_q3_52010_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q3_52010_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT8
+            if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52050_pos+DL/2+DRIFTL8);
+        }
+        if(s_status)
+        {
+            // DIPOLE3: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52070_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52070_pos + DL/2 + DRIFTL9 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL9 = Constants::_mbb_52070_pos + DL/2 + DRIFTL9 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT9-S
+            if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT6
-        if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q3_52010_pos+DRIFTL6);
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT9
+            if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52070_pos+DL/2+DRIFTL9);
+        }
+        if(s_status)
+        {
+            // DIPOLE4: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52090_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52090_pos + DL/2 + DRIFTL10 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL10 = Constants::_mbb_52090_pos+DL/2+DRIFTL10 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT10-S
+            if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DIPOLE1: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mba_52030_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT10
+            if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52090_pos+DL/2+DRIFTL10);
+        }
+        if(s_status)
+        {
+            // QUAD4: FOC in Y, DEFOC in X
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ4,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q4_52110_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q4_52110_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q4_52110_pos + DRIFTL11 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL11 = Constants::_q4_52110_pos + DRIFTL11 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT11-S
+            if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT7
-        if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52030_pos+DL/2+DRIFTL7);
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT11
+            if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q4_52110_pos+DRIFTL11);
+        }
+        if(s_status)
+        {
+            // DIPOLE5: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52130_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52130_pos + DL/2 + DRIFTL12 - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL12 = Constants::_mbb_52130_pos + DL/2 + DRIFTL12 - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT12-S
+            if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DIPOLE2: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mba_52050_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT12
+            if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52130_pos+DL/2+DRIFTL12);
+        }
+        if(s_status)
+        {
+            // DIPOLE6: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52150_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_xrph_52202_ua9_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL13 = Constants::_xrph_52202_ua9_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT13-S
+            if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-        // DRIFT8
-        if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52050_pos+DL/2+DRIFTL8);
-
-        // DIPOLE3: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mbb_52070_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
-
-        // DRIFT9
-        if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52070_pos+DL/2+DRIFTL9);
-
-        // DIPOLE4: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mbb_52090_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
-
-        // DRIFT10
-        if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52090_pos+DL/2+DRIFTL10);
-
-        // QUAD4: FOC in Y, DEFOC in X
-        if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ4,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_q4_52110_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q4_52110_pos);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
-
-        // DRIFT11
-        if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q4_52110_pos+DRIFTL11);
-
-        // DIPOLE5: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mbb_52130_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
-
-        // DRIFT12
-        if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52130_pos+DL/2+DRIFTL12);
-
-        // DIPOLE6: BEND & DEFOC in X, FOC in Y
-        if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_mbb_52150_pos<<" [m] ##"<<endl; /*continue;*/}
-        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos+DL/2);
-        gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[0]);
-        gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[2]);
-        gr_x_ipoint++;
-        gr_y_ipoint++;
-
-        // DRIFT13
-        if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_temp_1_x,coord_x,APH,APV))
-        {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}        
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT13
+            if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_temp_1_x,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
     }
     else
     {
-        // DRIFT0
-        if(!magnet->GetNewCoordDrift(DRIFTL0,order,coord_x0,coord_x,APH,APV))
-        {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
-    }
+        if(!s_status && s < Constants::_xrph_52202_ua9_pos - Constants::_cry3_51799_ua9_pos)
+        {
+            DRIFTL0 = Constants::_xrph_52202_ua9_pos - (Constants::_cry3_51799_ua9_pos + s);
+            // DRIFT0-S
+            if(!magnet->GetNewCoordDrift(DRIFTL0,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[0]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos+s,coord_x0[2]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
 
-    // FINAL
-    if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x[0],coord_x[1],Constants::_xrph_52202_ua9_pos);
-    gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[0]);
-    gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[2]);
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT0
+            if(!magnet->GetNewCoordDrift(DRIFTL0,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+    }
+    //-----------------------------------------------------------------------------------------------------------------------------//
+    if(s_status)
+    {
+        // FINAL
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x[0],coord_x[1],Constants::_xrph_52202_ua9_pos);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[0]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[2]);
+    }
 }

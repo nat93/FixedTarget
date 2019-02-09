@@ -11,10 +11,10 @@ namespace constants
   static const double targetWidth = 4.0;                    // [mm]
   static const double targetHeight = 50.0;                  // [mm]
   static const double targetCrystalGap = 0.5;               // [mm]
-  static const double crystalLength = 20.0;                 // [mm]
+  static const double crystalLength = 15.0;                 // [mm]
   static const double crystalWidth = 4.0;                   // [mm]
   static const double crystalHeight = 50.0;                 // [mm]
-  static const double crystalRadius = 4.0;                  // [m]
+  static const double crystalRadius = 1.0;                  // [m]
   //--------------------------------------------------------//
   // Normal vector to lattice                               //
   //--------------------------------------------------------//

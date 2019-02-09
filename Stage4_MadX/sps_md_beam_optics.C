@@ -483,7 +483,7 @@ void function_3()
     const Double_t BEAMX_MIN = -0.040*1e3;
     const Double_t BEAMX_MAX =  0.010*1e3;
     const Double_t CRYSTAL2_DEFL = -300.0e-6;
-    const Double_t CRYSTAL3_DEFL = -5000.0e-6;
+    const Double_t CRYSTAL3_DEFL = -15000.0e-6;
     const Double_t CRYSTAL_CRITICAL_ANGLE = 12.2e-6;
 
     Bool_t CRYSTAL2_CH_STATUS = false;

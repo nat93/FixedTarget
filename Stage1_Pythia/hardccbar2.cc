@@ -14,9 +14,23 @@
 //////////////////////////////////////////////////////////////////////
 
 //C, C++
+#define _BSD_SOURCE
+
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include "iostream"
+#include "string"
+#include "fstream"
+#include "vector"
+#include "stdlib.h"
+#include "time.h"
+#include "iomanip"
+#include "assert.h"
+#include "sys/types.h"
+#include "sys/stat.h"
+#include "unistd.h"
+#include "sys/time.h"
 
 //pythia
 #include "Pythia8/Pythia.h"
@@ -33,6 +47,8 @@
 #include "TNtuple.h"
 
 //each entry is an event, particles are stored in an array. Array size is the maximum number of particles an array can have
+
+// only stable
 
 const int arraySize = 20000;
 typedef struct
@@ -67,22 +83,19 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    Int_t rndSeed;
     Float_t protonE;
     Int_t nevents;
     TString outRootFileName;
 
-    if(argc == 5)
+    if(argc == 4)
     {
-        rndSeed         = atoi(argv[1]);
-        protonE         = atof(argv[2]);
-        nevents         = atoi(argv[3]);
-        outRootFileName = argv[4];
+        protonE         = atof(argv[1]);
+        nevents         = atoi(argv[2]);
+        outRootFileName = argv[3];
 
         cout<<endl;
         cout<<"--> Start <--"<<endl;
         cout<<"--> Lambda_c generation with p p colision "<<endl;
-        cout<<"--> random seed      : "<<rndSeed<<endl;
         cout<<"--> proton energy    : "<<protonE<<" GeV/c"<<endl;
         cout<<"--> number of events : "<<nevents<<endl;
         cout<<"--> Out root file    : "<<outRootFileName<<endl;
@@ -92,10 +105,9 @@ int main(int argc, char* argv[])
     {
         cout<<endl;
         cout<<"--> ERROR:: Wrong number in the input arguments!"<<endl;
-        cout<<"--> [1] -- random seed"<<endl;
-        cout<<"--> [2] -- proton energy"<<endl;
-        cout<<"--> [3] -- number of events"<<endl;
-        cout<<"--> [4] -- out root file"<<endl;
+        cout<<"--> [1] -- proton energy"<<endl;
+        cout<<"--> [2] -- number of events"<<endl;
+        cout<<"--> [3] -- out root file"<<endl;
         cout<<endl;
         assert(0);
     }
@@ -103,6 +115,11 @@ int main(int argc, char* argv[])
     // Generator. Shorthand for the event.
     Pythia pythia;
     Event& event = pythia.event;
+
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int rndSeed = tp.tv_usec;
+    cout<<"--> rndSeed = "<<rndSeed<<endl;
 
     pythia.readString("Random:setSeed = on");
     TString rndSeedStrRoot = "Random:seed = ";
@@ -114,7 +131,7 @@ int main(int argc, char* argv[])
     pythia.readString(numberOfEvents.Data());
 
     // Read in commands from external file.
-    pythia.readFile("hardccbar.cmnd");
+    pythia.readFile("hardccbar2.cmnd");
 
     // Extract settings to be used in the main program.
     int    nEvent    = pythia.mode("Main:numberOfEvents");
@@ -126,11 +143,8 @@ int main(int argc, char* argv[])
     bool   showAStat = pythia.flag("Main:showAllStatistics");
     cout<<"showAStat "<<showAStat<<endl;
 
-    // We are interested in Lc -> p K- pi+
+    // We are interested in Lc stable
     bool isLambdacgenerated;
-    bool isLambdacProtongenerated;
-    bool isLambdacKaonMgenerated;
-    bool isLambdacPionPgenerated;
 
     // Initialize. Beam parameters set in .cmnd file.
     //pythia.init(2212,2212,400,0); // 400 GeV/c proton on a proton at rest
@@ -178,8 +192,6 @@ int main(int argc, char* argv[])
 
     TFile *outFile = new TFile(outRootFileName.Data(),"RECREATE");
 
-    Int_t LambdaC_ind, proton_ind, kaon_ind, pion_ind;
-
     //for(int iEvent = 0; iEvent < nEvent; iEvent++)
 
     while(nFills < nEvent)
@@ -192,9 +204,6 @@ int main(int argc, char* argv[])
         }
 
         isLambdacgenerated          = kFALSE;
-        isLambdacProtongenerated    = kFALSE;
-        isLambdacKaonMgenerated     = kFALSE;
-        isLambdacPionPgenerated     = kFALSE;
         // Nparticle is the total number of particles in the event (including the initial protons), the entry 0 is not counted (system)
         EventArray.Nparticle = event.size()-1;
         EventArray.Nproj = 1; // number of incoming particles
@@ -225,58 +234,20 @@ int main(int argc, char* argv[])
             EventArray.mass[i]      = event[i].m();         // the particle mass, stored with a minus sign (times the absolute value) for spacelike virtual particles
 
             //true if a id="4122" lambda_c has been generated
-            if(event[i].id() == 4122)
+            if(event[i].id() == 4122 && event[i].isFinal())
             {
                 isLambdacgenerated = kTRUE;
-                LambdaC_ind = i;
-            }
-            //true if a id="2212" proton has been generated
-            if(event[i].id() == 2212)
-            {
-                if(event[i].mother1() == LambdaC_ind)
-                {
-                    isLambdacProtongenerated = kTRUE;
-                    proton_ind = i;
-                }
-            }
-            //true if a id="-321" kaon- ( kaon-* )has been generated
-            if(event[i].id() == -321 || event[i].id() == -323)
-            {
-                if(event[i].mother1() == LambdaC_ind)
-                {
-                    isLambdacKaonMgenerated = kTRUE;
-                    kaon_ind = i;
-                }
-            }
-            //true if a id="211" pion+ has been generated
-            if(event[i].id() == 211)
-            {
-                if(event[i].mother1() == LambdaC_ind)
-                {
-                    isLambdacPionPgenerated = kTRUE;
-                    pion_ind = i;
-                }
             }
         }
         //end of particle loop
 
         //fill each event
-        if(isLambdacgenerated && isLambdacProtongenerated && isLambdacKaonMgenerated && isLambdacPionPgenerated)
+        if(isLambdacgenerated)
         {
-            if(nFills%100 == 0)
+            if(nFills%1000 == 0)
             {
                 cout<<endl<<endl;
                 cout<<"--> nFills = "<<nFills<<endl;
-                cout<<"--> Here is the info:"<<endl;
-                cout<<"--> LambdaC_ind = "<<LambdaC_ind<<endl;
-                cout<<"--> EventArray.firstDau["<<LambdaC_ind<<"] = "<<EventArray.firstDau[LambdaC_ind]<<endl;
-                cout<<"--> EventArray.lastDau["<<LambdaC_ind<<"] = "<<EventArray.lastDau[LambdaC_ind]<<endl;
-                cout<<"--> proton_ind = "<<proton_ind<<" | "<<EventArray.ID[proton_ind]<<endl;
-                cout<<"--> EventArray.Mindex["<<proton_ind<<"] = "<<EventArray.Mindex[proton_ind]<<endl;
-                cout<<"--> kaon_ind = "<<kaon_ind<<" | "<<EventArray.ID[kaon_ind]<<endl;
-                cout<<"--> EventArray.Mindex["<<kaon_ind<<"] = "<<EventArray.Mindex[kaon_ind]<<endl;
-                cout<<"--> pion_ind = "<<pion_ind<<" | "<<EventArray.ID[pion_ind]<<endl;
-                cout<<"--> EventArray.Mindex["<<pion_ind<<"] = "<<EventArray.Mindex[pion_ind]<<endl;
                 cout<<endl;
             }
 
