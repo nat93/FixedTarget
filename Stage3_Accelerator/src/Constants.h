@@ -3,7 +3,7 @@
 
 namespace Constants
 {
-
+const double _ctau_Lambda0 = 78.9e-3;           // [m]
 // Position
 const double _cry3_51799_ua9_pos = 5180.8295;   // [m]
 const double _cry4_51799_ua9_pos = 5181.3245;   // [m]

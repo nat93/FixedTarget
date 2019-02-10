@@ -73,6 +73,8 @@ void function_5(TString output_file_name);
 
 Bool_t isChanneled(Double_t particleAngleOut);
 void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph* gr_x, TGraph* gr_y, Bool_t print);
+Double_t getGamma(Double_t mass, Double_t pmag);
+Double_t getBeta(Double_t gamma);
 
 Int_t main(int argc, char* argv[])
 {
@@ -757,6 +759,13 @@ void function_4(TString output_file_name)
 void function_5(TString output_file_name)
 {
     //-----------------------------------------//
+    Bool_t plot_graph = kTRUE;
+    //-----------------------------------------//
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
+    TRandom3* rnd = new TRandom3(seed);
+    //-----------------------------------------//
     // Magnets section
     //-----------------------------------------//
 
@@ -786,7 +795,7 @@ void function_5(TString output_file_name)
     Double_t* coord_x_pion_m           = new Double_t[mtrx_size];
 
     Int_t nRuns = 0;
-    const Int_t nLc = 1;// number of decayed Lc
+    const Int_t nLc = 100;// number of decayed Lc
 
     TLorentzVector pProd_1[3];
     TLorentzVector pProd_2[3];
@@ -824,9 +833,18 @@ void function_5(TString output_file_name)
     TH2D* h_15 = new TH2D("h_15","XY pion+ on RP3",1000,-10,10,1000,-10,10);
     TH2D* h_16 = new TH2D("h_16","XY proton on RP3",1000,-10,10,1000,-10,10);
     TH2D* h_17 = new TH2D("h_17","XY pion- on RP3",1000,-10,10,1000,-10,10);
+    TH1D* h_18 = new TH1D("h_18","L0 decay length [m]",110000,-10,100);
+    TH1D* h_19 = new TH1D("h_19","L0 decay length (z-proj) [m]",110000,-10,100);
 
+    cout<<endl;
     for(Int_t i = 0; i < nLc; i++)
     {
+        if(i%100 == 0)
+        {
+            printf("\r--> Working: %3.1f",100.0*i/nLc);
+            fflush(stdout);
+        }
+
         // RANDOM //
         Double_t pLc = 250.0; // [GeV/c]
 
@@ -856,7 +874,23 @@ void function_5(TString output_file_name)
             /*dp*/    coord_x0_lambda0[5] = 0.0;
 
             // RANDOM //
-            s_decay_2 = 10.0; // [m]
+            Double_t gamma_L0   = getGamma(mProd_2[0],p_lambda0);
+            Double_t beta_L0    = getBeta(gamma_L0);
+            Double_t prob       = rnd->Uniform(0.0,1.0);
+            Double_t cosTheta = pProd_1[1].CosTheta();
+
+            if(prob == 0)
+            {
+                while( 1 )
+                {
+                    prob = rnd->Uniform(0.0,1.0);
+                    if(prob > 0) break;
+                }
+            }
+            s_decay_2 = Constants::_ctau_Lambda0*beta_L0*gamma_L0*TMath::Log(1.0/prob); // [m]
+            h_18->Fill(s_decay_2);
+            s_decay_2 = s_decay_2*cosTheta;
+            h_19->Fill(s_decay_2);
 
             //--------------------//
             // Pion+
@@ -913,10 +947,13 @@ void function_5(TString output_file_name)
 
             passMagnets(s_decay_1,coord_x0_pion_p,coord_x_pion_p,p_pion_p,charge_pion_p,gr_pion_p_x,gr_pion_p_y,false);
 
-            gr_lambda0_x->Write();
-            gr_lambda0_y->Write();
-            gr_pion_p_x->Write();
-            gr_pion_p_y->Write();
+            if(plot_graph)
+            {
+                gr_lambda0_x->Write();
+                gr_lambda0_y->Write();
+                gr_pion_p_x->Write();
+                gr_pion_p_y->Write();
+            }
 
             if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > Constants::_xrph_51937_ua9_pos)
                 h_10->Fill(gr_lambda0_x->Eval(Constants::_xrph_51937_ua9_pos),gr_lambda0_y->Eval(Constants::_xrph_51937_ua9_pos));
@@ -990,10 +1027,13 @@ void function_5(TString output_file_name)
 
                 passMagnets(s_decay_2,coord_x0_pion_m,coord_x_pion_m,p_pion_m,charge_pion_m,gr_pion_m_x,gr_pion_m_y,false);
 
-                gr_proton_x->Write();
-                gr_proton_y->Write();
-                gr_pion_m_x->Write();
-                gr_pion_m_y->Write();
+                if(plot_graph)
+                {
+                    gr_proton_x->Write();
+                    gr_proton_y->Write();
+                    gr_pion_m_x->Write();
+                    gr_pion_m_y->Write();
+                }
 
                 if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 < Constants::_xrph_51937_ua9_pos)
                     h_12->Fill(gr_proton_x->Eval(Constants::_xrph_51937_ua9_pos),gr_proton_y->Eval(Constants::_xrph_51937_ua9_pos));
@@ -1038,6 +1078,8 @@ void function_5(TString output_file_name)
     h_15->Write();
     h_16->Write();
     h_17->Write();
+    h_18->Write();
+    h_19->Write();
 
     _file->Close();
 
@@ -1559,4 +1601,34 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[0]);
         gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[2]);
     }
+}
+
+Double_t getGamma(Double_t mass, Double_t pmag)
+{
+    if(mass > 0.0)
+    {
+        return TMath::Sqrt(1.0 + pmag*pmag/(mass*mass));
+    }
+    else
+    {
+        cout<<" ERROR ---> mass <= 0.0"<<endl
+           <<" mass = "<<mass<<endl;
+        assert(0);
+    }
+    return -999.0;
+}
+
+Double_t getBeta(Double_t gamma)
+{
+    if(gamma >= 1.0)
+    {
+        return TMath::Sqrt(1.0 - 1.0/(gamma*gamma));
+    }
+    else
+    {
+        cout<<" ERROR ---> gamma < 1"<<endl
+           <<" gamma = "<<gamma<<endl;
+        assert(0);
+    }
+    return -999.0;
 }

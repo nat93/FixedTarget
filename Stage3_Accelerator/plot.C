@@ -321,7 +321,7 @@ void function_2()
     //----------------------------------------------------------------//
     TFile* _file0 = TFile::Open("accelerator.root");
 
-    const int nGraph = 1;
+    const int nGraph = 100;
 
 //    const double _cry3_51799_ua9_pos = 5180.8295;   // [m]
 //    const double _cry4_51799_ua9_pos = 5181.3245;   // [m]
