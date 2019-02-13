@@ -349,9 +349,26 @@ void function_2()
     TGraph* gr_pion_m_y[nGraph];
 
     TMultiGraph* mg_x = new TMultiGraph();
-    TMultiGraph* mg_y = new TMultiGraph();
+    TMultiGraph* mg_lambda0_x = new TMultiGraph();
+    TMultiGraph* mg_pion_p_x = new TMultiGraph();
+    TMultiGraph* mg_proton_x = new TMultiGraph();
+    TMultiGraph* mg_pion_m_x = new TMultiGraph();
     mg_x->SetName("mg_x");
+    mg_lambda0_x->SetName("mg_lambda0_x");
+    mg_pion_p_x->SetName("mg_pion_p_x");
+    mg_proton_x->SetName("mg_proton_x");
+    mg_pion_m_x->SetName("mg_pion_m_x");
+
+    TMultiGraph* mg_y = new TMultiGraph();
+    TMultiGraph* mg_lambda0_y = new TMultiGraph();
+    TMultiGraph* mg_pion_p_y = new TMultiGraph();
+    TMultiGraph* mg_proton_y = new TMultiGraph();
+    TMultiGraph* mg_pion_m_y = new TMultiGraph();
     mg_y->SetName("mg_y");
+    mg_lambda0_y->SetName("mg_lambda0_y");
+    mg_pion_p_y->SetName("mg_pion_p_y");
+    mg_proton_y->SetName("mg_proton_y");
+    mg_pion_m_y->SetName("mg_pion_m_y");
 
     for(Int_t i = 0; i < nGraph; i++)
     {
@@ -396,18 +413,44 @@ void function_2()
         gr_pion_m_y[i]->SetLineColor(kBlue);
 
         mg_x->Add(gr_lambda0_x[i]);
+        mg_lambda0_x->Add(gr_lambda0_x[i]);
+
         mg_x->Add(gr_pion_p_x[i]);
+        mg_pion_p_x->Add(gr_pion_p_x[i]);
+
         mg_x->Add(gr_proton_x[i]);
+        mg_proton_x->Add(gr_proton_x[i]);
+
         mg_x->Add(gr_pion_m_x[i]);
+        mg_pion_m_x->Add(gr_pion_m_x[i]);
 
         mg_y->Add(gr_lambda0_y[i]);
+        mg_lambda0_y->Add(gr_lambda0_y[i]);
+
         mg_y->Add(gr_pion_p_y[i]);
+        mg_pion_p_y->Add(gr_pion_p_y[i]);
+
         mg_y->Add(gr_proton_y[i]);
+        mg_proton_y->Add(gr_proton_y[i]);
+
         mg_y->Add(gr_pion_m_y[i]);
+        mg_pion_m_y->Add(gr_pion_m_y[i]);
     }
 
-    mg_x->Add(gr_madx);
+    /*mg_x->Add(gr_madx);
     mg_x->Add(gr_accl);
+
+    mg_lambda0_x->Add(gr_madx);
+    mg_lambda0_x->Add(gr_accl);
+
+    mg_pion_p_x->Add(gr_madx);
+    mg_pion_p_x->Add(gr_accl);
+
+    mg_proton_x->Add(gr_madx);
+    mg_proton_x->Add(gr_accl);
+
+    mg_pion_m_x->Add(gr_madx);
+    mg_pion_m_x->Add(gr_accl);*/
 
     TLine* line_xrph_51937_ua9 = new TLine(_xrph_51937_ua9_pos,-1,_xrph_51937_ua9_pos,1);
     TLine* line_xrph_52202_ua9 = new TLine(_xrph_52202_ua9_pos,-1,_xrph_52202_ua9_pos,1);
@@ -418,9 +461,57 @@ void function_2()
     line_xrph_51937_ua9->Draw("same");
     line_xrph_52202_ua9->Draw("same");
 
+    TCanvas* c_lambda0_x = new TCanvas("c_lambda0_x","c_lambda0_x");
+    c_lambda0_x->cd();
+    mg_lambda0_x->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_pion_p_x = new TCanvas("c_pion_p_x","c_pion_p_x");
+    c_pion_p_x->cd();
+    mg_pion_p_x->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_proton_x = new TCanvas("c_proton_x","c_proton_x");
+    c_proton_x->cd();
+    mg_proton_x->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_pion_m_x = new TCanvas("c_pion_m_x","c_pion_m_x");
+    c_pion_m_x->cd();
+    mg_pion_m_x->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
     TCanvas* c_1_y = new TCanvas("c_1_y","c_1_y");
     c_1_y->cd();
     mg_y->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_lambda0_y = new TCanvas("c_lambda0_y","c_lambda0_y");
+    c_lambda0_y->cd();
+    mg_lambda0_y->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_pion_p_y = new TCanvas("c_pion_p_y","c_pion_p_y");
+    c_pion_p_y->cd();
+    mg_pion_p_y->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_proton_y = new TCanvas("c_proton_y","c_proton_y");
+    c_proton_y->cd();
+    mg_proton_y->Draw("APL");
+    line_xrph_51937_ua9->Draw("same");
+    line_xrph_52202_ua9->Draw("same");
+
+    TCanvas* c_pion_m_y = new TCanvas("c_pion_m_y","c_pion_m_y");
+    c_pion_m_y->cd();
+    mg_pion_m_y->Draw("APL");
     line_xrph_51937_ua9->Draw("same");
     line_xrph_52202_ua9->Draw("same");
 }
