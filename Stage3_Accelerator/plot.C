@@ -53,6 +53,7 @@ int plot()
     cout<<endl;
     cout<<"--> function_1() -- threebody decay Lc -> p K- pi+"<<endl;
     cout<<"--> function_2() -- twobody decay Lc -> L0 pi+ -> (p pi-) pi+"<<endl;
+    cout<<"--> function_3() -- to plot angular distribution Lc"<<endl;
     return 0;
 }
 
@@ -319,9 +320,9 @@ void function_2()
     gr_madx->SetLineColor(kBlack);
     gr_madx->SetLineWidth(3);
     //----------------------------------------------------------------//
-    TFile* _file0 = TFile::Open("accelerator.root");
+    TFile* _file0 = TFile::Open("accelerator_25mrad_all.root");
 
-    const int nGraph = 100;
+    const int nGraph = 228;
 
 //    const double _cry3_51799_ua9_pos = 5180.8295;   // [m]
 //    const double _cry4_51799_ua9_pos = 5181.3245;   // [m]
@@ -348,6 +349,15 @@ void function_2()
     TGraph* gr_pion_m_x[nGraph];
     TGraph* gr_pion_m_y[nGraph];
 
+    TGraph* gr_lambda0_xp[nGraph];
+    TGraph* gr_lambda0_yp[nGraph];
+    TGraph* gr_pion_p_xp[nGraph];
+    TGraph* gr_pion_p_yp[nGraph];
+    TGraph* gr_proton_xp[nGraph];
+    TGraph* gr_proton_yp[nGraph];
+    TGraph* gr_pion_m_xp[nGraph];
+    TGraph* gr_pion_m_yp[nGraph];
+
     TMultiGraph* mg_x = new TMultiGraph();
     TMultiGraph* mg_lambda0_x = new TMultiGraph();
     TMultiGraph* mg_pion_p_x = new TMultiGraph();
@@ -358,6 +368,17 @@ void function_2()
     mg_pion_p_x->SetName("mg_pion_p_x");
     mg_proton_x->SetName("mg_proton_x");
     mg_pion_m_x->SetName("mg_pion_m_x");
+
+    TMultiGraph* mg_xp = new TMultiGraph();
+    TMultiGraph* mg_lambda0_xp = new TMultiGraph();
+    TMultiGraph* mg_pion_p_xp = new TMultiGraph();
+    TMultiGraph* mg_proton_xp = new TMultiGraph();
+    TMultiGraph* mg_pion_m_xp = new TMultiGraph();
+    mg_xp->SetName("mg_xp");
+    mg_lambda0_xp->SetName("mg_lambda0_xp");
+    mg_pion_p_xp->SetName("mg_pion_p_xp");
+    mg_proton_xp->SetName("mg_proton_xp");
+    mg_pion_m_xp->SetName("mg_pion_m_xp");
 
     TMultiGraph* mg_y = new TMultiGraph();
     TMultiGraph* mg_lambda0_y = new TMultiGraph();
@@ -370,72 +391,160 @@ void function_2()
     mg_proton_y->SetName("mg_proton_y");
     mg_pion_m_y->SetName("mg_pion_m_y");
 
-    for(Int_t i = 0; i < nGraph; i++)
-    {
-        TString gr_lambda0_x_name = "gr_lambda0_x_";
-        TString gr_lambda0_y_name = "gr_lambda0_y_";
-        gr_lambda0_x_name += i;
-        gr_lambda0_y_name += i;
-        gr_lambda0_x[i] = (TGraph*)_file0->Get(gr_lambda0_x_name.Data());
-        gr_lambda0_y[i] = (TGraph*)_file0->Get(gr_lambda0_y_name.Data());
-        gr_lambda0_x[i]->SetLineColor(kMagenta);
-        gr_lambda0_y[i]->SetLineColor(kMagenta);
-        gr_lambda0_x[i]->SetMarkerStyle(20);
-        gr_lambda0_y[i]->SetMarkerStyle(20);
-        gr_lambda0_x[i]->SetLineStyle(9);
-        gr_lambda0_y[i]->SetLineStyle(9);
+    TMultiGraph* mg_yp = new TMultiGraph();
+    TMultiGraph* mg_lambda0_yp = new TMultiGraph();
+    TMultiGraph* mg_pion_p_yp = new TMultiGraph();
+    TMultiGraph* mg_proton_yp = new TMultiGraph();
+    TMultiGraph* mg_pion_m_yp = new TMultiGraph();
+    mg_yp->SetName("mg_yp");
+    mg_lambda0_yp->SetName("mg_lambda0_yp");
+    mg_pion_p_yp->SetName("mg_pion_p_yp");
+    mg_proton_yp->SetName("mg_proton_yp");
+    mg_pion_m_yp->SetName("mg_pion_m_yp");
 
-        TString gr_pion_p_x_name = "gr_pion_p_x_";
-        TString gr_pion_p_y_name = "gr_pion_p_y_";
-        gr_pion_p_x_name += i;
-        gr_pion_p_y_name += i;
-        gr_pion_p_x[i] = (TGraph*)_file0->Get(gr_pion_p_x_name.Data());
-        gr_pion_p_y[i] = (TGraph*)_file0->Get(gr_pion_p_y_name.Data());
-        gr_pion_p_x[i]->SetLineColor(kGreen);
-        gr_pion_p_y[i]->SetLineColor(kGreen);
+//    for(Int_t i = 0; i < nGraph; i++)
+//    {
+//        if(i != 0) continue;
 
-        TString gr_proton_x_name = "gr_proton_x_";
-        TString gr_proton_y_name = "gr_proton_y_";
-        gr_proton_x_name += i;
-        gr_proton_y_name += i;
-        gr_proton_x[i] = (TGraph*)_file0->Get(gr_proton_x_name.Data());
-        gr_proton_y[i] = (TGraph*)_file0->Get(gr_proton_y_name.Data());
-        gr_proton_x[i]->SetLineColor(kRed);
-        gr_proton_y[i]->SetLineColor(kRed);
+//        TString gr_lambda0_x_name = "gr_lambda0_x_";
+//        TString gr_lambda0_y_name = "gr_lambda0_y_";
+//        gr_lambda0_x_name += i;
+//        gr_lambda0_y_name += i;
+//        gr_lambda0_x[i] = (TGraph*)_file0->Get(gr_lambda0_x_name.Data());
+//        gr_lambda0_y[i] = (TGraph*)_file0->Get(gr_lambda0_y_name.Data());
+//        gr_lambda0_x[i]->SetLineColor(kMagenta);
+//        gr_lambda0_y[i]->SetLineColor(kMagenta);
+//        gr_lambda0_x[i]->SetMarkerStyle(20);
+//        gr_lambda0_y[i]->SetMarkerStyle(20);
+//        gr_lambda0_x[i]->SetLineStyle(9);
+//        gr_lambda0_y[i]->SetLineStyle(9);
 
-        TString gr_pion_m_x_name = "gr_pion_m_x_";
-        TString gr_pion_m_y_name = "gr_pion_m_y_";
-        gr_pion_m_x_name += i;
-        gr_pion_m_y_name += i;
-        gr_pion_m_x[i] = (TGraph*)_file0->Get(gr_pion_m_x_name.Data());
-        gr_pion_m_y[i] = (TGraph*)_file0->Get(gr_pion_m_y_name.Data());
-        gr_pion_m_x[i]->SetLineColor(kBlue);
-        gr_pion_m_y[i]->SetLineColor(kBlue);
+//        TString gr_lambda0_xp_name = "gr_lambda0_xp_";
+//        TString gr_lambda0_yp_name = "gr_lambda0_yp_";
+//        gr_lambda0_xp_name += i;
+//        gr_lambda0_yp_name += i;
+//        gr_lambda0_xp[i] = (TGraph*)_file0->Get(gr_lambda0_xp_name.Data());
+//        gr_lambda0_yp[i] = (TGraph*)_file0->Get(gr_lambda0_yp_name.Data());
+//        gr_lambda0_xp[i]->SetLineColor(kMagenta);
+//        gr_lambda0_yp[i]->SetLineColor(kMagenta);
+//        gr_lambda0_xp[i]->SetMarkerStyle(20);
+//        gr_lambda0_yp[i]->SetMarkerStyle(20);
+//        gr_lambda0_xp[i]->SetLineStyle(9);
+//        gr_lambda0_yp[i]->SetLineStyle(9);
 
-        mg_x->Add(gr_lambda0_x[i]);
-        mg_lambda0_x->Add(gr_lambda0_x[i]);
+//        TString gr_pion_p_x_name = "gr_pion_p_x_";
+//        TString gr_pion_p_y_name = "gr_pion_p_y_";
+//        gr_pion_p_x_name += i;
+//        gr_pion_p_y_name += i;
+//        gr_pion_p_x[i] = (TGraph*)_file0->Get(gr_pion_p_x_name.Data());
+//        gr_pion_p_y[i] = (TGraph*)_file0->Get(gr_pion_p_y_name.Data());
+//        gr_pion_p_x[i]->SetLineColor(kGreen);
+//        gr_pion_p_y[i]->SetLineColor(kGreen);
 
-        mg_x->Add(gr_pion_p_x[i]);
-        mg_pion_p_x->Add(gr_pion_p_x[i]);
+//        TString gr_pion_p_xp_name = "gr_pion_p_xp_";
+//        TString gr_pion_p_yp_name = "gr_pion_p_yp_";
+//        gr_pion_p_xp_name += i;
+//        gr_pion_p_yp_name += i;
+//        gr_pion_p_xp[i] = (TGraph*)_file0->Get(gr_pion_p_xp_name.Data());
+//        gr_pion_p_yp[i] = (TGraph*)_file0->Get(gr_pion_p_yp_name.Data());
+//        gr_pion_p_xp[i]->SetLineColor(kGreen);
+//        gr_pion_p_yp[i]->SetLineColor(kGreen);
 
-        mg_x->Add(gr_proton_x[i]);
-        mg_proton_x->Add(gr_proton_x[i]);
+//        TString gr_proton_x_name = "gr_proton_x_";
+//        TString gr_proton_y_name = "gr_proton_y_";
+//        gr_proton_x_name += i;
+//        gr_proton_y_name += i;
+//        gr_proton_x[i] = (TGraph*)_file0->Get(gr_proton_x_name.Data());
+//        gr_proton_y[i] = (TGraph*)_file0->Get(gr_proton_y_name.Data());
+//        gr_proton_x[i]->SetLineColor(kRed);
+//        gr_proton_y[i]->SetLineColor(kRed);
 
-        mg_x->Add(gr_pion_m_x[i]);
-        mg_pion_m_x->Add(gr_pion_m_x[i]);
+//        TString gr_proton_xp_name = "gr_proton_xp_";
+//        TString gr_proton_yp_name = "gr_proton_yp_";
+//        gr_proton_xp_name += i;
+//        gr_proton_yp_name += i;
+//        gr_proton_xp[i] = (TGraph*)_file0->Get(gr_proton_xp_name.Data());
+//        gr_proton_yp[i] = (TGraph*)_file0->Get(gr_proton_yp_name.Data());
+//        gr_proton_xp[i]->SetLineColor(kRed);
+//        gr_proton_yp[i]->SetLineColor(kRed);
 
-        mg_y->Add(gr_lambda0_y[i]);
-        mg_lambda0_y->Add(gr_lambda0_y[i]);
+//        TString gr_pion_m_x_name = "gr_pion_m_x_";
+//        TString gr_pion_m_y_name = "gr_pion_m_y_";
+//        gr_pion_m_x_name += i;
+//        gr_pion_m_y_name += i;
+//        gr_pion_m_x[i] = (TGraph*)_file0->Get(gr_pion_m_x_name.Data());
+//        gr_pion_m_y[i] = (TGraph*)_file0->Get(gr_pion_m_y_name.Data());
+//        gr_pion_m_x[i]->SetLineColor(kBlue);
+//        gr_pion_m_y[i]->SetLineColor(kBlue);
 
-        mg_y->Add(gr_pion_p_y[i]);
-        mg_pion_p_y->Add(gr_pion_p_y[i]);
+//        TString gr_pion_m_xp_name = "gr_pion_m_xp_";
+//        TString gr_pion_m_yp_name = "gr_pion_m_yp_";
+//        gr_pion_m_xp_name += i;
+//        gr_pion_m_yp_name += i;
+//        gr_pion_m_xp[i] = (TGraph*)_file0->Get(gr_pion_m_xp_name.Data());
+//        gr_pion_m_yp[i] = (TGraph*)_file0->Get(gr_pion_m_yp_name.Data());
+//        gr_pion_m_xp[i]->SetLineColor(kBlue);
+//        gr_pion_m_yp[i]->SetLineColor(kBlue);
 
-        mg_y->Add(gr_proton_y[i]);
-        mg_proton_y->Add(gr_proton_y[i]);
+////        Double_t x_temp, s_temp;
+////        gr_pion_m_x[i]->GetPoint(0,s_temp,x_temp);
+////        if(s_temp < 5185.1704 - 3)
+////        {
+////            cout<<i<<endl;
+////        }
+////        else
+////        {
+////            continue;
+////        }
 
-        mg_y->Add(gr_pion_m_y[i]);
-        mg_pion_m_y->Add(gr_pion_m_y[i]);
-    }
+//        mg_x->Add(gr_lambda0_x[i]);
+//        mg_lambda0_x->Add(gr_lambda0_x[i]);
+
+//        mg_x->Add(gr_pion_p_x[i]);
+//        mg_pion_p_x->Add(gr_pion_p_x[i]);
+
+//        mg_x->Add(gr_proton_x[i]);
+//        mg_proton_x->Add(gr_proton_x[i]);
+
+//        mg_x->Add(gr_pion_m_x[i]);
+//        mg_pion_m_x->Add(gr_pion_m_x[i]);
+
+//        mg_y->Add(gr_lambda0_y[i]);
+//        mg_lambda0_y->Add(gr_lambda0_y[i]);
+
+//        mg_y->Add(gr_pion_p_y[i]);
+//        mg_pion_p_y->Add(gr_pion_p_y[i]);
+
+//        mg_y->Add(gr_proton_y[i]);
+//        mg_proton_y->Add(gr_proton_y[i]);
+
+//        mg_y->Add(gr_pion_m_y[i]);
+//        mg_pion_m_y->Add(gr_pion_m_y[i]);
+
+//        mg_xp->Add(gr_lambda0_xp[i]);
+//        mg_lambda0_xp->Add(gr_lambda0_xp[i]);
+
+//        mg_xp->Add(gr_pion_p_xp[i]);
+//        mg_pion_p_xp->Add(gr_pion_p_xp[i]);
+
+//        mg_xp->Add(gr_proton_xp[i]);
+//        mg_proton_xp->Add(gr_proton_xp[i]);
+
+//        mg_xp->Add(gr_pion_m_xp[i]);
+//        mg_pion_m_xp->Add(gr_pion_m_xp[i]);
+
+//        mg_yp->Add(gr_lambda0_yp[i]);
+//        mg_lambda0_yp->Add(gr_lambda0_yp[i]);
+
+//        mg_yp->Add(gr_pion_p_yp[i]);
+//        mg_pion_p_yp->Add(gr_pion_p_yp[i]);
+
+//        mg_yp->Add(gr_proton_yp[i]);
+//        mg_proton_yp->Add(gr_proton_yp[i]);
+
+//        mg_yp->Add(gr_pion_m_yp[i]);
+//        mg_pion_m_yp->Add(gr_pion_m_yp[i]);
+//    }
 
     /*mg_x->Add(gr_madx);
     mg_x->Add(gr_accl);
@@ -452,66 +561,329 @@ void function_2()
     mg_pion_m_x->Add(gr_madx);
     mg_pion_m_x->Add(gr_accl);*/
 
-    TLine* line_xrph_51937_ua9 = new TLine(_xrph_51937_ua9_pos,-1,_xrph_51937_ua9_pos,1);
-    TLine* line_xrph_52202_ua9 = new TLine(_xrph_52202_ua9_pos,-1,_xrph_52202_ua9_pos,1);
+//    TLine* line_xrph_51937_ua9 = new TLine(_xrph_51937_ua9_pos,-1,_xrph_51937_ua9_pos,1);
+//    TLine* line_xrph_52202_ua9 = new TLine(_xrph_52202_ua9_pos,-1,_xrph_52202_ua9_pos,1);
 
-    TCanvas* c_1_x = new TCanvas("c_1_x","c_1_x");
-    c_1_x->cd();
-    mg_x->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_1_x = new TCanvas("c_1_x","c_1_x",1920,1800);
+//    c_1_x->cd();
+//    mg_x->Draw("APL");
+//    mg_x->SetMaximum(0.3);
+//    mg_x->SetMinimum(-0.4);
+//    mg_x->GetXaxis()->SetLimits(5180,5185+7);
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_lambda0_x = new TCanvas("c_lambda0_x","c_lambda0_x");
-    c_lambda0_x->cd();
-    mg_lambda0_x->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_1_xp = new TCanvas("c_1_xp","c_1_xp");
+//    c_1_xp->cd();
+//    mg_xp->Draw("APL");
+//    mg_xp->SetMaximum(0.3);
+//    mg_xp->SetMinimum(-0.3);
+//    mg_xp->GetXaxis()->SetLimits(5180,5200);
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_pion_p_x = new TCanvas("c_pion_p_x","c_pion_p_x");
-    c_pion_p_x->cd();
-    mg_pion_p_x->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_lambda0_x = new TCanvas("c_lambda0_x","c_lambda0_x");
+//    c_lambda0_x->cd();
+//    mg_lambda0_x->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_proton_x = new TCanvas("c_proton_x","c_proton_x");
-    c_proton_x->cd();
-    mg_proton_x->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_pion_p_x = new TCanvas("c_pion_p_x","c_pion_p_x");
+//    c_pion_p_x->cd();
+//    mg_pion_p_x->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_pion_m_x = new TCanvas("c_pion_m_x","c_pion_m_x");
-    c_pion_m_x->cd();
-    mg_pion_m_x->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_proton_x = new TCanvas("c_proton_x","c_proton_x");
+//    c_proton_x->cd();
+//    mg_proton_x->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_1_y = new TCanvas("c_1_y","c_1_y");
-    c_1_y->cd();
-    mg_y->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_pion_m_x = new TCanvas("c_pion_m_x","c_pion_m_x");
+//    c_pion_m_x->cd();
+//    mg_pion_m_x->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_lambda0_y = new TCanvas("c_lambda0_y","c_lambda0_y");
-    c_lambda0_y->cd();
-    mg_lambda0_y->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_1_y = new TCanvas("c_1_y","c_1_y");
+//    c_1_y->cd();
+//    mg_y->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_pion_p_y = new TCanvas("c_pion_p_y","c_pion_p_y");
-    c_pion_p_y->cd();
-    mg_pion_p_y->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_lambda0_y = new TCanvas("c_lambda0_y","c_lambda0_y");
+//    c_lambda0_y->cd();
+//    mg_lambda0_y->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_proton_y = new TCanvas("c_proton_y","c_proton_y");
-    c_proton_y->cd();
-    mg_proton_y->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_pion_p_y = new TCanvas("c_pion_p_y","c_pion_p_y");
+//    c_pion_p_y->cd();
+//    mg_pion_p_y->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
 
-    TCanvas* c_pion_m_y = new TCanvas("c_pion_m_y","c_pion_m_y");
-    c_pion_m_y->cd();
-    mg_pion_m_y->Draw("APL");
-    line_xrph_51937_ua9->Draw("same");
-    line_xrph_52202_ua9->Draw("same");
+//    TCanvas* c_proton_y = new TCanvas("c_proton_y","c_proton_y");
+//    c_proton_y->cd();
+//    mg_proton_y->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
+
+//    TCanvas* c_pion_m_y = new TCanvas("c_pion_m_y","c_pion_m_y");
+//    c_pion_m_y->cd();
+//    mg_pion_m_y->Draw("APL");
+//    line_xrph_51937_ua9->Draw("same");
+//    line_xrph_52202_ua9->Draw("same");
+
+    //--------------------------------------------------------------//
+
+    TH2D* h_lambda0_1 = (TH2D*)_file0->Get("h_28");
+    TH2D* h_pion_p_1 = (TH2D*)_file0->Get("h_29");
+    TH2D* h_proton_1 = (TH2D*)_file0->Get("h_30");
+    TH2D* h_pion_m_1 = (TH2D*)_file0->Get("h_31");
+
+    Int_t first_bin = h_proton_1->GetXaxis()->FindBin(-0.2);
+    Int_t last_bin = h_proton_1->GetXaxis()->FindBin(0.2);
+
+    h_lambda0_1->GetXaxis()->SetRange(first_bin,last_bin);
+    h_lambda0_1->GetYaxis()->SetRange(first_bin,last_bin);
+    h_proton_1->GetXaxis()->SetRange(first_bin,last_bin);
+    h_proton_1->GetYaxis()->SetRange(first_bin,last_bin);
+    h_pion_p_1->GetXaxis()->SetRange(first_bin,last_bin);
+    h_pion_p_1->GetYaxis()->SetRange(first_bin,last_bin);
+    h_pion_m_1->GetXaxis()->SetRange(first_bin,last_bin);
+    h_pion_m_1->GetYaxis()->SetRange(first_bin,last_bin);
+
+    h_lambda0_1->GetXaxis()->SetTitle("X [m]");
+    h_lambda0_1->GetYaxis()->SetTitle("Y [m]");
+    h_proton_1->GetXaxis()->SetTitle("X [m]");
+    h_proton_1->GetYaxis()->SetTitle("Y [m]");
+    h_pion_p_1->GetXaxis()->SetTitle("X [m]");
+    h_pion_p_1->GetYaxis()->SetTitle("Y [m]");
+    h_pion_m_1->GetXaxis()->SetTitle("X [m]");
+    h_pion_m_1->GetYaxis()->SetTitle("Y [m]");
+
+    h_lambda0_1->SetMarkerStyle(7);
+    h_proton_1->SetMarkerStyle(7);
+    h_pion_p_1->SetMarkerStyle(7);
+    h_pion_m_1->SetMarkerStyle(7);
+
+    h_lambda0_1->SetMarkerColor(kMagenta);
+    h_proton_1->SetMarkerColor(kRed);
+    h_pion_p_1->SetMarkerColor(kGreen);
+    h_pion_m_1->SetMarkerColor(kBlue);
+
+    TCanvas* c_2 = new TCanvas("c_2","c_2");
+    c_2->Divide(2,2);    
+
+    c_2->cd(1);
+    gPad->SetGrid();
+    h_lambda0_1->Draw();
+    c_2->cd(2);
+    gPad->SetGrid();
+    h_pion_p_1->Draw();
+    c_2->cd(3);
+    gPad->SetGrid();
+    h_proton_1->Draw();
+    c_2->cd(4);
+    gPad->SetGrid();
+    h_pion_m_1->Draw();
+
+    //--------------------------------------------------------------//
+
+    TH2D* h_lambda0_2 = (TH2D*)_file0->Get("h_32");
+    TH2D* h_pion_p_2 = (TH2D*)_file0->Get("h_33");
+    TH2D* h_proton_2 = (TH2D*)_file0->Get("h_34");
+    TH2D* h_pion_m_2 = (TH2D*)_file0->Get("h_35");
+
+    h_lambda0_2->GetXaxis()->SetRange(first_bin,last_bin);
+    h_lambda0_2->GetYaxis()->SetRange(first_bin,last_bin);
+    h_proton_2->GetXaxis()->SetRange(first_bin,last_bin);
+    h_proton_2->GetYaxis()->SetRange(first_bin,last_bin);
+    h_pion_p_2->GetXaxis()->SetRange(first_bin,last_bin);
+    h_pion_p_2->GetYaxis()->SetRange(first_bin,last_bin);
+    h_pion_m_2->GetXaxis()->SetRange(first_bin,last_bin);
+    h_pion_m_2->GetYaxis()->SetRange(first_bin,last_bin);
+
+    h_lambda0_2->GetXaxis()->SetTitle("X [m]");
+    h_lambda0_2->GetYaxis()->SetTitle("Y [m]");
+    h_proton_2->GetXaxis()->SetTitle("X [m]");
+    h_proton_2->GetYaxis()->SetTitle("Y [m]");
+    h_pion_p_2->GetXaxis()->SetTitle("X [m]");
+    h_pion_p_2->GetYaxis()->SetTitle("Y [m]");
+    h_pion_m_2->GetXaxis()->SetTitle("X [m]");
+    h_pion_m_2->GetYaxis()->SetTitle("Y [m]");
+
+    h_lambda0_2->SetMarkerStyle(7);
+    h_proton_2->SetMarkerStyle(7);
+    h_pion_p_2->SetMarkerStyle(7);
+    h_pion_m_2->SetMarkerStyle(7);
+
+    h_lambda0_2->SetMarkerColor(kMagenta);
+    h_proton_2->SetMarkerColor(kRed);
+    h_pion_p_2->SetMarkerColor(kGreen);
+    h_pion_m_2->SetMarkerColor(kBlue);
+
+    TCanvas* c_3 = new TCanvas("c_3","c_3");
+    c_3->Divide(2,2);
+
+    c_3->cd(1);
+    gPad->SetGrid();
+    h_lambda0_2->Draw();
+    c_3->cd(2);
+    gPad->SetGrid();
+    h_pion_p_2->Draw();
+    c_3->cd(3);
+    gPad->SetGrid();
+    h_proton_2->Draw();
+    c_3->cd(4);
+    gPad->SetGrid();
+    h_pion_m_2->Draw();
+
+    //--------------------------------------------------------------//
+
+    TH2D* h_lambda0_3 = (TH2D*)_file0->Get("h_44");
+    TH2D* h_pion_p_3 = (TH2D*)_file0->Get("h_45");
+    TH2D* h_proton_3 = (TH2D*)_file0->Get("h_46");
+    TH2D* h_pion_m_3 = (TH2D*)_file0->Get("h_47");
+
+    Int_t first_bin_x = h_lambda0_3->GetXaxis()->FindBin(-0.2);
+    Int_t last_bin_x = h_lambda0_3->GetXaxis()->FindBin(0.2);
+    Int_t first_bin_xp = h_lambda0_3->GetYaxis()->FindBin(-0.1);
+    Int_t last_bin_xp = h_lambda0_3->GetYaxis()->FindBin(0.1);
+
+    h_lambda0_3->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_lambda0_3->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_proton_3->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_proton_3->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_pion_p_3->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_pion_p_3->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_pion_m_3->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_pion_m_3->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+
+    h_lambda0_3->GetXaxis()->SetTitle("X [m]");
+    h_lambda0_3->GetYaxis()->SetTitle("X' [rad]");
+    h_proton_3->GetXaxis()->SetTitle("X [m]");
+    h_proton_3->GetYaxis()->SetTitle("X' [rad]");
+    h_pion_p_3->GetXaxis()->SetTitle("X [m]");
+    h_pion_p_3->GetYaxis()->SetTitle("X' [rad]");
+    h_pion_m_3->GetXaxis()->SetTitle("X [m]");
+    h_pion_m_3->GetYaxis()->SetTitle("X' [rad]");
+
+    h_lambda0_3->SetMarkerStyle(7);
+    h_proton_3->SetMarkerStyle(7);
+    h_pion_p_3->SetMarkerStyle(7);
+    h_pion_m_3->SetMarkerStyle(7);
+
+    h_lambda0_3->SetMarkerColor(kMagenta);
+    h_proton_3->SetMarkerColor(kRed);
+    h_pion_p_3->SetMarkerColor(kGreen);
+    h_pion_m_3->SetMarkerColor(kBlue);
+
+    TCanvas* c_4 = new TCanvas("c_4","c_4");
+    c_4->Divide(2,2);
+
+    c_4->cd(1);
+    gPad->SetGrid();
+    h_lambda0_3->Draw();
+    c_4->cd(2);
+    gPad->SetGrid();
+    h_pion_p_3->Draw();
+    c_4->cd(3);
+    gPad->SetGrid();
+    h_proton_3->Draw();
+    c_4->cd(4);
+    gPad->SetGrid();
+    h_pion_m_3->Draw();
+
+    //--------------------------------------------------------------//
+
+    TH2D* h_lambda0_4 = (TH2D*)_file0->Get("h_48");
+    TH2D* h_pion_p_4 = (TH2D*)_file0->Get("h_49");
+    TH2D* h_proton_4 = (TH2D*)_file0->Get("h_50");
+    TH2D* h_pion_m_4 = (TH2D*)_file0->Get("h_51");
+
+    h_lambda0_4->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_lambda0_4->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_proton_4->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_proton_4->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_pion_p_4->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_pion_p_4->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+    h_pion_m_4->GetXaxis()->SetRange(first_bin_x,last_bin_x);
+    h_pion_m_4->GetYaxis()->SetRange(first_bin_xp,last_bin_xp);
+
+    h_lambda0_4->GetXaxis()->SetTitle("X [m]");
+    h_lambda0_4->GetYaxis()->SetTitle("X' [rad]");
+    h_proton_4->GetXaxis()->SetTitle("X [m]");
+    h_proton_4->GetYaxis()->SetTitle("X' [rad]");
+    h_pion_p_4->GetXaxis()->SetTitle("X [m]");
+    h_pion_p_4->GetYaxis()->SetTitle("X' [rad]");
+    h_pion_m_4->GetXaxis()->SetTitle("X [m]");
+    h_pion_m_4->GetYaxis()->SetTitle("X' [rad]");
+
+    h_lambda0_4->SetMarkerStyle(7);
+    h_proton_4->SetMarkerStyle(7);
+    h_pion_p_4->SetMarkerStyle(7);
+    h_pion_m_4->SetMarkerStyle(7);
+
+    h_lambda0_4->SetMarkerColor(kMagenta);
+    h_proton_4->SetMarkerColor(kRed);
+    h_pion_p_4->SetMarkerColor(kGreen);
+    h_pion_m_4->SetMarkerColor(kBlue);
+
+    TCanvas* c_5 = new TCanvas("c_5","c_5");
+    c_5->Divide(2,2);
+
+    c_5->cd(1);
+    gPad->SetGrid();
+    h_lambda0_4->Draw();
+    c_5->cd(2);
+    gPad->SetGrid();
+    h_pion_p_4->Draw();
+    c_5->cd(3);
+    gPad->SetGrid();
+    h_proton_4->Draw();
+    c_5->cd(4);
+    gPad->SetGrid();
+    h_pion_m_4->Draw();/**/
+
+    //--------------------------------------------------------------//
+}
+
+void function_3()
+{
+    TFile* _file0 = TFile::Open("accelerator.root");
+    TH1D* h_21 = (TH1D*)_file0->Get("h_21");
+    TH1D* h_22 = (TH1D*)_file0->Get("h_22");
+    TH2D* h_23 = (TH2D*)_file0->Get("h_23");
+
+    TCanvas* c_1 = new TCanvas("c_1","c_1",1900,1200);
+    c_1->cd();
+    h_21->Rebin(100);
+    h_21->GetXaxis()->SetRange(h_21->GetXaxis()->FindBin(-0.05),h_21->GetXaxis()->FindBin(0.05));
+    h_21->Draw();
+    h_21->SetLineWidth(2);
+    h_21->SetFillColor(kCyan);
+
+    Double_t par_1[3];
+
+    TF1* fit_1 = new TF1("fit_1","gaus",-0.005,0.005);
+    TF1* fit_2 = new TF1("fit_2","gaus",-0.05,0.05);
+    h_21->Fit(fit_1,"RQ0");
+    fit_1->GetParameters(&par_1[0]);
+    fit_2->SetParameters(&par_1[0]);
+    fit_2->Draw("same");
+
+    TCanvas* c_2 = new TCanvas("c_2","c_2",1900,1200);
+    c_2->cd();
+    h_22->Draw();
+    h_22->SetLineWidth(2);
+    h_22->SetFillColor(kCyan);
+
+    TCanvas* c_3 = new TCanvas("c_3","c_3",1000,1000);
+    c_3->cd();
+    h_23->Draw("colz");
+    h_23->GetXaxis()->SetRange(h_23->GetXaxis()->FindBin(-0.05),h_23->GetXaxis()->FindBin(0.05));
+    h_23->SetMinimum(-1);
 }

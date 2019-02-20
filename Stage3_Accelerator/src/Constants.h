@@ -25,7 +25,7 @@ const double _beamAngleInitialAtCryPosition     = -535.513e-6; // [rad]
 const double _beamPositionInitialAtCryPosition  = -0.0227284;  // [m]
 
 const double _crystalAngle = -15000.0e-6;       // [rad]
-const double _crystalOrientation = 0.0e-6;      // [rad]
+const double _crystalOrientation = 25000.0e-6;   // [rad]
 const double _channeledAngleRange = 100.0e-6;   // [rad]
 
 const double _nominal_momentum = 270.0;         // [GeV/c]
