@@ -47,6 +47,8 @@ using namespace std;
 
 void function_1();
 void function_2();
+void function_3();
+void function_4();
 
 int plot()
 {
@@ -54,6 +56,7 @@ int plot()
     cout<<"--> function_1() -- threebody decay Lc -> p K- pi+"<<endl;
     cout<<"--> function_2() -- twobody decay Lc -> L0 pi+ -> (p pi-) pi+"<<endl;
     cout<<"--> function_3() -- to plot angular distribution Lc"<<endl;
+    cout<<"--> function_4() -- to plot detection fraction of the Lc"<<endl;
     return 0;
 }
 
@@ -320,7 +323,7 @@ void function_2()
     gr_madx->SetLineColor(kBlack);
     gr_madx->SetLineWidth(3);
     //----------------------------------------------------------------//
-    TFile* _file0 = TFile::Open("accelerator_25mrad_all.root");
+    TFile* _file0 = TFile::Open("accelerator_10mrad_all.root");
 
     const int nGraph = 228;
 
@@ -674,21 +677,26 @@ void function_2()
     h_pion_p_1->SetMarkerColor(kGreen);
     h_pion_m_1->SetMarkerColor(kBlue);
 
-    TCanvas* c_2 = new TCanvas("c_2","c_2");
+    TCanvas* c_2 = new TCanvas("c_2","c_2",1000,1000);
     c_2->Divide(2,2);    
+
+    h_lambda0_1->Rebin2D(10);
+    h_pion_p_1->Rebin2D(10);
+    h_proton_1->Rebin2D(10);
+    h_pion_m_1->Rebin2D(10);
 
     c_2->cd(1);
     gPad->SetGrid();
-    h_lambda0_1->Draw();
+    h_lambda0_1->Draw("colz");
     c_2->cd(2);
     gPad->SetGrid();
-    h_pion_p_1->Draw();
+    h_pion_p_1->Draw("colz");
     c_2->cd(3);
     gPad->SetGrid();
-    h_proton_1->Draw();
+    h_proton_1->Draw("colz");
     c_2->cd(4);
     gPad->SetGrid();
-    h_pion_m_1->Draw();
+    h_pion_m_1->Draw("colz");
 
     //--------------------------------------------------------------//
 
@@ -725,24 +733,29 @@ void function_2()
     h_pion_p_2->SetMarkerColor(kGreen);
     h_pion_m_2->SetMarkerColor(kBlue);
 
-    TCanvas* c_3 = new TCanvas("c_3","c_3");
+    TCanvas* c_3 = new TCanvas("c_3","c_3",1000,1000);
     c_3->Divide(2,2);
+
+    h_lambda0_2->Rebin2D(10);
+    h_pion_p_2->Rebin2D(10);
+    h_proton_2->Rebin2D(10);
+    h_pion_m_2->Rebin2D(10);
 
     c_3->cd(1);
     gPad->SetGrid();
-    h_lambda0_2->Draw();
+    h_lambda0_2->Draw("colz");
     c_3->cd(2);
     gPad->SetGrid();
-    h_pion_p_2->Draw();
+    h_pion_p_2->Draw("colz");
     c_3->cd(3);
     gPad->SetGrid();
-    h_proton_2->Draw();
+    h_proton_2->Draw("colz");
     c_3->cd(4);
     gPad->SetGrid();
-    h_pion_m_2->Draw();
+    h_pion_m_2->Draw("colz");
 
     //--------------------------------------------------------------//
-
+/*
     TH2D* h_lambda0_3 = (TH2D*)_file0->Get("h_44");
     TH2D* h_pion_p_3 = (TH2D*)_file0->Get("h_45");
     TH2D* h_proton_3 = (TH2D*)_file0->Get("h_46");
@@ -886,4 +899,46 @@ void function_3()
     h_23->Draw("colz");
     h_23->GetXaxis()->SetRange(h_23->GetXaxis()->FindBin(-0.05),h_23->GetXaxis()->FindBin(0.05));
     h_23->SetMinimum(-1);
+}
+
+void function_4()
+{
+    const Int_t nn              = 7;
+    const Double_t nRuns        = 1849951.0;
+    Double_t dim[]              = {5.0,1.0,0.5,0.3,0.1,0.05,0.03};
+    Double_t nLc[]              = {378139.0,367997.0,319380.0,203005.0,1749.0,46.0,1.0};
+    Double_t nLc_err[nn]        = {};
+    Double_t fraction[nn]       = {};
+    Double_t fraction_err[nn]   = {};
+    Double_t area[nn]           = {};
+    Double_t area_err[nn]       = {};
+
+    for(Int_t i = 0; i < nn; i++)
+    {
+        area[i]         = TMath::Power(dim[i],2);
+        area_err[i]     = TMath::Sqrt(2.0)*dim[i]*55.0e-6/TMath::Sqrt(12.0);
+        nLc_err[i]      = TMath::Sqrt(nLc[i]);
+        fraction[i]     = nLc[i]/nRuns;
+        fraction_err[i] = TMath::Sqrt(TMath::Power(nLc_err[i]/nRuns,2) + TMath::Power(nLc[i]*TMath::Sqrt(nRuns)/(nRuns*nRuns),2));
+    }
+
+    TGraphErrors* gr = new TGraphErrors(nn,area,fraction,area_err,fraction_err);
+    gr->SetMarkerStyle(21);
+    gr->SetMarkerColor(kRed);
+    gr->SetLineColor(kBlue);
+    gr->SetTitle("");
+    gr->GetXaxis()->SetTitle("Sensor Area [m^{2}]");
+    gr->GetYaxis()->SetTitle("Detection Efficiency");
+    gr->GetXaxis()->CenterTitle();
+    gr->GetYaxis()->CenterTitle();
+
+    TCanvas* c_1 = new TCanvas("c_1","c_1",1000,1000);
+    c_1->cd();
+    gPad->SetGrid();
+    gr->Draw("APL");
+    c_1->SetLogx();
+    c_1->SetLogy();
+    gr->GetXaxis()->SetLimits(1e-4,1e2);
+    gr->SetMinimum(1e-7);
+    gr->SetMaximum(1);
 }

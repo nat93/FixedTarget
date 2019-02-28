@@ -63,7 +63,7 @@ void MagClass::GetDriftMatrixT(Double_t L, Double_t ***M)
 }
 
 // Bending in Horizontal direction for Dipole Rectangular Magnet Matrix First Order
-void MagClass::GetDipoleRectangularMatrixHorizontalR(Double_t Phi, Double_t Q, Double_t L, Double_t **M)
+void MagClass::GetDipoleRectangularMatrixHorizontalR(Double_t p_nominal, Double_t p, Double_t Phi, Double_t Q, Double_t L, Double_t **M)
 {
     // Check the angle
     if(Phi == 0)
@@ -125,11 +125,14 @@ void MagClass::GetDipoleRectangularMatrixHorizontalR(Double_t Phi, Double_t Q, D
         MM_Y[ii] = new Double_t[_mtrx_size/2];
     }
 
-    Double_t Rho = L/Phi; // [m]
-    Double_t K = Q/TMath::Power(Rho,2); // [m-2]]
+//    Double_t Rho = L/Phi; // [m]
     Double_t Delta = Phi/2.0; // [rad]
 
-    if(K > 0)
+    // Magnetic field of the dipole for the nominal momentum
+    Double_t B0         = p_nominal*Phi/(L*0.2998); // [T]
+    Double_t Rho        = p/(B0*0.2998*TMath::Abs(Q)); // [m]
+
+    if(Q > 0)
     {
         // QUAD DEFOC X
         MQ_X[0][0] = 1.0;                     MQ_X[0][1] = 0.0; MQ_X[0][2] = 0.0;
@@ -549,7 +552,7 @@ bool MagClass::GetNewCoordDrift(Double_t L, Int_t order, Double_t *X0, Double_t 
 }
 
 // Get new coordinates after passing the DIPOLE
-bool MagClass::GetNewCoordDipole(Double_t Phi, Double_t Q, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV)
+bool MagClass::GetNewCoordDipole(Double_t p_nominal, Double_t p, Double_t Phi, Double_t Q, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV)
 {
     // Check the order
     if(order != 1 && order != 2)
@@ -572,7 +575,7 @@ bool MagClass::GetNewCoordDipole(Double_t Phi, Double_t Q, Double_t L, Int_t ord
         }
     }
 
-    GetDipoleRectangularMatrixHorizontalR(Phi,Q,L,R);
+    GetDipoleRectangularMatrixHorizontalR(p_nominal,p,Phi,Q,L,R);
     GetDipoleRectangularMatrixHorizontalT(Phi,Q,L,T);
     GetNewCoord(X0,R,T,order,X);
 

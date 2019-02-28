@@ -850,8 +850,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
     //-----------------------------------------//
     Bool_t plot_graph   = kFALSE;//kTRUE;               // to plot graphs
     const Int_t nLc     = 10e7;                // number of maximum Lc decays
-    const Double_t tr1_pos = Constants::_q1_51810_pos-2.8;
-    const Double_t tr2_pos = Constants::_q1_51810_pos+5.0;
+    Int_t detected = 0;
+    Int_t nLc_reconstructed = 0;
     //-----------------------------------------//
     // Read file
     //-----------------------------------------//
@@ -1064,6 +1064,16 @@ void function_5(TString input_filedir_name, TString output_file_name)
     TH2D* h_58 = new TH2D("h_58","YpY proton at TR2",4000,-0.2,0.2,6000,-0.3,0.3);
     TH2D* h_59 = new TH2D("h_59","YpY pion- at TR2",4000,-0.2,0.2,6000,-0.3,0.3);
     TH2D* h_60 = new TH2D("h_60","proton angle vs pion- angle at L_{0} decay",6000,-0.3,0.3,6000,-0.3,0.3);
+    TH2D* h_61 = new TH2D("h_61","XY pion+ at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_62 = new TH2D("h_62","XY proton at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_63 = new TH2D("h_63","XY pion- at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_64 = new TH2D("h_64","XY pion+ at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_65 = new TH2D("h_65","XY proton at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_66 = new TH2D("h_66","XY pion- at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+    TH2D* h_67 = new TH2D("h_67","L_{0} theta vs phi",800,-4.0,4.0,20000,-0.1,0.1);
+    TH2D* h_68 = new TH2D("h_68","pion+ theta vs phi",800,-4.0,4.0,20000,-0.1,0.1);
+    TH2D* h_69 = new TH2D("h_69","proton theta vs phi (cut)",800,-4.0,4.0,20000,-0.1,0.1);
+    TH2D* h_70 = new TH2D("h_70","pion- theta vs phi",800,-4.0,4.0,20000,-0.1,0.1);
 
     cout<<endl;
     Bool_t isLambdacgenerated;
@@ -1108,6 +1118,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
 
             pProd_1[0].SetPxPyPzE(0,0,pLc,eLc);
 
+            detected = 0;
+
             if(/*isChanneled(thetaXLambdaCout) &&*/ isLambdacgenerated)
             {
                 h_1->Fill(pLc);
@@ -1123,6 +1135,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
                     p_lambda0 = pProd_1[1].P();
                     h_2->Fill(p_lambda0);
                     h_24->Fill(pLc,p_lambda0);
+                    h_67->Fill(pProd_1[1].Phi(),pProd_1[1].Theta());
+
                     theta_x_lambda0 =
                             Constants::_beamAngleInitialAtCryPosition +
                             Constants::_crystalAngle +
@@ -1164,6 +1178,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
                     p_pion_p = pProd_1[2].P();
                     h_3->Fill(p_pion_p);
                     h_25->Fill(pLc,p_pion_p);
+                    h_68->Fill(pProd_1[2].Phi(),pProd_1[2].Theta());
+
                     theta_x_pion_p =
                             Constants::_beamAngleInitialAtCryPosition +
                             Constants::_crystalAngle +
@@ -1254,32 +1270,52 @@ void function_5(TString input_filedir_name, TString output_file_name)
                     if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > Constants::_xrph_52202_ua9_pos)
                         h_14->Fill(gr_lambda0_x->Eval(Constants::_xrph_52202_ua9_pos),gr_lambda0_y->Eval(Constants::_xrph_52202_ua9_pos));
 
-                    if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > tr1_pos)
+                    if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > Constants::_tr1_s_pos)
                     {
-                        h_28->Fill(gr_lambda0_x->Eval(tr1_pos),gr_lambda0_y->Eval(tr1_pos));
-                        h_36->Fill(gr_lambda0_xp->Eval(tr1_pos),gr_lambda0_yp->Eval(tr1_pos));
-                        h_44->Fill(gr_lambda0_x->Eval(tr1_pos),gr_lambda0_xp->Eval(tr1_pos));
-                        h_52->Fill(gr_lambda0_y->Eval(tr1_pos),gr_lambda0_yp->Eval(tr1_pos));
+                        h_28->Fill(gr_lambda0_x->Eval(Constants::_tr1_s_pos),gr_lambda0_y->Eval(Constants::_tr1_s_pos));
+                        h_36->Fill(gr_lambda0_xp->Eval(Constants::_tr1_s_pos),gr_lambda0_yp->Eval(Constants::_tr1_s_pos));
+                        h_44->Fill(gr_lambda0_x->Eval(Constants::_tr1_s_pos),gr_lambda0_xp->Eval(Constants::_tr1_s_pos));
+                        h_52->Fill(gr_lambda0_y->Eval(Constants::_tr1_s_pos),gr_lambda0_yp->Eval(Constants::_tr1_s_pos));
                     }
 
-                    if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > tr2_pos)
+                    if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 > Constants::_tr2_s_pos)
                     {
-                        h_32->Fill(gr_lambda0_x->Eval(tr2_pos),gr_lambda0_y->Eval(tr2_pos));
-                        h_40->Fill(gr_lambda0_xp->Eval(tr2_pos),gr_lambda0_yp->Eval(tr2_pos));
-                        h_48->Fill(gr_lambda0_x->Eval(tr2_pos),gr_lambda0_xp->Eval(tr2_pos));
-                        h_56->Fill(gr_lambda0_y->Eval(tr2_pos),gr_lambda0_yp->Eval(tr2_pos));
+                        h_32->Fill(gr_lambda0_x->Eval(Constants::_tr2_s_pos),gr_lambda0_y->Eval(Constants::_tr2_s_pos));
+                        h_40->Fill(gr_lambda0_xp->Eval(Constants::_tr2_s_pos),gr_lambda0_yp->Eval(Constants::_tr2_s_pos));
+                        h_48->Fill(gr_lambda0_x->Eval(Constants::_tr2_s_pos),gr_lambda0_xp->Eval(Constants::_tr2_s_pos));
+                        h_56->Fill(gr_lambda0_y->Eval(Constants::_tr2_s_pos),gr_lambda0_yp->Eval(Constants::_tr2_s_pos));
                     }
 
                     h_11->Fill(gr_pion_p_x->Eval(Constants::_xrph_51937_ua9_pos),gr_pion_p_y->Eval(Constants::_xrph_51937_ua9_pos));
                     h_15->Fill(gr_pion_p_x->Eval(Constants::_xrph_52202_ua9_pos),gr_pion_p_y->Eval(Constants::_xrph_52202_ua9_pos));
-                    h_29->Fill(gr_pion_p_x->Eval(tr1_pos),gr_pion_p_y->Eval(tr1_pos));
-                    h_37->Fill(gr_pion_p_xp->Eval(tr1_pos),gr_pion_p_yp->Eval(tr1_pos));
-                    h_45->Fill(gr_pion_p_x->Eval(tr1_pos),gr_pion_p_xp->Eval(tr1_pos));
-                    h_53->Fill(gr_pion_p_y->Eval(tr1_pos),gr_pion_p_yp->Eval(tr1_pos));
-                    h_33->Fill(gr_pion_p_x->Eval(tr2_pos),gr_pion_p_y->Eval(tr2_pos));
-                    h_41->Fill(gr_pion_p_xp->Eval(tr2_pos),gr_pion_p_yp->Eval(tr2_pos));
-                    h_49->Fill(gr_pion_p_x->Eval(tr2_pos),gr_pion_p_xp->Eval(tr2_pos));
-                    h_57->Fill(gr_pion_p_y->Eval(tr2_pos),gr_pion_p_yp->Eval(tr2_pos));
+                    h_29->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
+                    h_37->Fill(gr_pion_p_xp->Eval(Constants::_tr1_s_pos),gr_pion_p_yp->Eval(Constants::_tr1_s_pos));
+                    h_45->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_xp->Eval(Constants::_tr1_s_pos));
+                    h_53->Fill(gr_pion_p_y->Eval(Constants::_tr1_s_pos),gr_pion_p_yp->Eval(Constants::_tr1_s_pos));
+                    h_33->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                    h_41->Fill(gr_pion_p_xp->Eval(Constants::_tr2_s_pos),gr_pion_p_yp->Eval(Constants::_tr2_s_pos));
+                    h_49->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_xp->Eval(Constants::_tr2_s_pos));
+                    h_57->Fill(gr_pion_p_y->Eval(Constants::_tr2_s_pos),gr_pion_p_yp->Eval(Constants::_tr2_s_pos));
+
+                    // TRACKER 1
+                    if(gr_pion_p_x->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                       gr_pion_p_x->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                       gr_pion_p_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                       gr_pion_p_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
+                    {
+                        detected += 1;
+                        h_61->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
+
+                        // TRACKER 2
+                        if(gr_pion_p_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                           gr_pion_p_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                           gr_pion_p_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                           gr_pion_p_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
+                        {
+                            detected += 1;
+                            h_64->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                        }
+                    }
 
                     pProd_2[0].SetPxPyPzE(0.0,0.0,pProd_1[1].P(),pProd_1[1].E());
 
@@ -1292,6 +1328,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
                         p_proton = pProd_2[1].P();
                         h_4->Fill(p_proton);
                         h_26->Fill(pLc,p_proton);
+                        h_69->Fill(pProd_2[1].Phi(),pProd_2[1].Theta());
+
                         theta_x_proton = coord_x_lambda0[1] + TMath::ATan(pProd_2[1].Px()/pProd_2[1].Pz());
                         h_8->Fill(theta_x_proton);
                         theta_y_proton = coord_x_lambda0[3] + TMath::ATan(pProd_2[1].Py()/pProd_2[1].Pz());
@@ -1310,6 +1348,8 @@ void function_5(TString input_filedir_name, TString output_file_name)
                         p_pion_m = pProd_2[2].P();
                         h_5->Fill(p_pion_m);
                         h_27->Fill(pLc,p_pion_m);
+                        h_70->Fill(pProd_2[2].Phi(),pProd_2[2].Theta());
+
                         theta_x_pion_m = coord_x_lambda0[1] + TMath::ATan(pProd_2[2].Px()/pProd_2[2].Pz());
                         h_9->Fill(theta_x_pion_m);
                         theta_y_pion_m = coord_x_lambda0[3] + TMath::ATan(pProd_2[2].Py()/pProd_2[2].Pz());
@@ -1388,25 +1428,65 @@ void function_5(TString input_filedir_name, TString output_file_name)
                             h_17->Fill(gr_pion_m_x->Eval(Constants::_xrph_52202_ua9_pos),gr_pion_m_y->Eval(Constants::_xrph_52202_ua9_pos));
                         }
 
-                        if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 < tr1_pos)
+                        if(Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2 < Constants::_tr1_s_pos)
                         {
-                            h_30->Fill(gr_proton_x->Eval(tr1_pos),gr_proton_y->Eval(tr1_pos));
-                            h_38->Fill(gr_proton_xp->Eval(tr1_pos),gr_proton_yp->Eval(tr1_pos));
-                            h_46->Fill(gr_proton_x->Eval(tr1_pos),gr_proton_xp->Eval(tr1_pos));
-                            h_54->Fill(gr_proton_y->Eval(tr1_pos),gr_proton_yp->Eval(tr1_pos));
-                            h_31->Fill(gr_pion_m_x->Eval(tr1_pos),gr_pion_m_y->Eval(tr1_pos));
-                            h_39->Fill(gr_pion_m_xp->Eval(tr1_pos),gr_pion_m_yp->Eval(tr1_pos));
-                            h_47->Fill(gr_pion_m_x->Eval(tr1_pos),gr_pion_m_xp->Eval(tr1_pos));
-                            h_54->Fill(gr_pion_m_y->Eval(tr1_pos),gr_pion_m_yp->Eval(tr1_pos));
+                            h_30->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_y->Eval(Constants::_tr1_s_pos));
+                            h_38->Fill(gr_proton_xp->Eval(Constants::_tr1_s_pos),gr_proton_yp->Eval(Constants::_tr1_s_pos));
+                            h_46->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_xp->Eval(Constants::_tr1_s_pos));
+                            h_54->Fill(gr_proton_y->Eval(Constants::_tr1_s_pos),gr_proton_yp->Eval(Constants::_tr1_s_pos));
+                            h_31->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_y->Eval(Constants::_tr1_s_pos));
+                            h_39->Fill(gr_pion_m_xp->Eval(Constants::_tr1_s_pos),gr_pion_m_yp->Eval(Constants::_tr1_s_pos));
+                            h_47->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_xp->Eval(Constants::_tr1_s_pos));
+                            h_55->Fill(gr_pion_m_y->Eval(Constants::_tr1_s_pos),gr_pion_m_yp->Eval(Constants::_tr1_s_pos));
 
-                            h_34->Fill(gr_proton_x->Eval(tr2_pos),gr_proton_y->Eval(tr2_pos));
-                            h_42->Fill(gr_proton_xp->Eval(tr2_pos),gr_proton_yp->Eval(tr2_pos));
-                            h_50->Fill(gr_proton_x->Eval(tr2_pos),gr_proton_xp->Eval(tr2_pos));
-                            h_58->Fill(gr_proton_y->Eval(tr2_pos),gr_proton_yp->Eval(tr2_pos));
-                            h_35->Fill(gr_pion_m_x->Eval(tr2_pos),gr_pion_m_y->Eval(tr2_pos));
-                            h_43->Fill(gr_pion_m_xp->Eval(tr2_pos),gr_pion_m_yp->Eval(tr2_pos));
-                            h_51->Fill(gr_pion_m_x->Eval(tr2_pos),gr_pion_m_xp->Eval(tr2_pos));
-                            h_59->Fill(gr_pion_m_y->Eval(tr2_pos),gr_pion_m_yp->Eval(tr2_pos));
+                            // TRACKER 1
+                            if(gr_proton_x->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                               gr_proton_x->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                               gr_proton_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                               gr_proton_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
+                            {
+                                detected += 1;
+                                h_62->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_y->Eval(Constants::_tr1_s_pos));
+
+                                // TRACKER 2
+                                if(gr_proton_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_proton_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_proton_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_proton_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
+                                {
+                                    detected += 1;
+                                    h_65->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
+                                }
+                            }
+
+                            // TRACKER 1
+                            if(gr_pion_m_x->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                               gr_pion_m_x->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                               gr_pion_m_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                               gr_pion_m_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
+                            {
+                                detected += 1;
+                                h_63->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_y->Eval(Constants::_tr1_s_pos));
+
+                                // TRACKER 2
+                                if(gr_pion_m_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_pion_m_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_pion_m_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                                   gr_pion_m_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
+                                {
+                                    detected += 1;
+                                    h_66->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                                }
+                            }
+
+                            h_34->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
+                            h_42->Fill(gr_proton_xp->Eval(Constants::_tr2_s_pos),gr_proton_yp->Eval(Constants::_tr2_s_pos));
+                            h_50->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_xp->Eval(Constants::_tr2_s_pos));
+                            h_58->Fill(gr_proton_y->Eval(Constants::_tr2_s_pos),gr_proton_yp->Eval(Constants::_tr2_s_pos));
+                            h_35->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                            h_43->Fill(gr_pion_m_xp->Eval(Constants::_tr2_s_pos),gr_pion_m_yp->Eval(Constants::_tr2_s_pos));
+                            h_51->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_xp->Eval(Constants::_tr2_s_pos));
+                            h_59->Fill(gr_pion_m_y->Eval(Constants::_tr2_s_pos),gr_pion_m_yp->Eval(Constants::_tr2_s_pos));
                         }
 
                         gr_proton_x->Delete();
@@ -1430,11 +1510,19 @@ void function_5(TString input_filedir_name, TString output_file_name)
 
                     nRuns++;
                 }
+
+                if(detected == 6)
+                {
+                    nLc_reconstructed += 1;
+                }
             }
         }
     }
 
     cout<<endl;
+
+    cout<<"--> _quadpix_xy_dim = "<<Constants::_quadpix_xy_dim<<endl;
+    cout<<"--> nLc_reconstructed = "<<nLc_reconstructed<<endl;
 
     h_1->Write();
     h_2->Write();
@@ -1496,6 +1584,16 @@ void function_5(TString input_filedir_name, TString output_file_name)
     h_58->Write();
     h_59->Write();
     h_60->Write();
+    h_61->Write();
+    h_62->Write();
+    h_63->Write();
+    h_64->Write();
+    h_65->Write();
+    h_66->Write();
+    h_67->Write();
+    h_68->Write();
+    h_69->Write();
+    h_70->Write();
 
     _file->Close();
 
@@ -1781,7 +1879,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE1: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mba_52030_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[0]);
@@ -1818,7 +1916,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE2: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mba_52050_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[0]);
@@ -1855,7 +1953,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE3: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mbb_52070_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[0]);
@@ -1892,7 +1990,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE4: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mbb_52090_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[0]);
@@ -1966,7 +2064,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE5: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mbb_52130_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[0]);
@@ -2003,7 +2101,7 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         if(s_status)
         {
             // DIPOLE6: BEND & DEFOC in X, FOC in Y
-            if(!magnet->GetNewCoordDipole(ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
             {if(print) cout<<"## At : "<<Constants::_mbb_52150_pos<<" [m] ##"<<endl; /*continue;*/}
             if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos+DL/2);
             gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[0]);
@@ -2104,3 +2202,4 @@ Double_t getBeta(Double_t gamma)
     }
     return -999.0;
 }
+

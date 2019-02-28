@@ -25,7 +25,7 @@ const double _beamAngleInitialAtCryPosition     = -535.513e-6; // [rad]
 const double _beamPositionInitialAtCryPosition  = -0.0227284;  // [m]
 
 const double _crystalAngle = -15000.0e-6;       // [rad]
-const double _crystalOrientation = 25000.0e-6;   // [rad]
+const double _crystalOrientation = 10000.0e-6;   // [rad]
 const double _channeledAngleRange = 100.0e-6;   // [rad]
 
 const double _nominal_momentum = 270.0;         // [GeV/c]
@@ -61,6 +61,14 @@ const double _aph = 0.075;                      // [m]
 const double _apv = 0.075;                      // [m]
 
 const bool _switch_magnets = true;
+
+const double _quadpix_xy_dim        = 0.03;                 // [m]
+const double _tr1_x_pos             = -0.031;               // [m]
+const double _tr1_y_pos             = 0.0;                  // [m]
+const double _tr1_s_pos             = _q1_51810_pos - 2.8;  // [m]
+const double _tr2_x_pos             = -0.075;               // [m]
+const double _tr2_y_pos             = 0.0;                  // [m]
+const double _tr2_s_pos             = _q1_51810_pos + 5.0;  // [m]
 }
 
 #endif

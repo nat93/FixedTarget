@@ -71,7 +71,7 @@ public :
 
    void GetDriftMatrixR(Double_t L, Double_t **M);                                                                          // Drift Matrix First Order
    void GetDriftMatrixT(Double_t L, Double_t ***M);                                                                         // Drift Matrix Second Order
-   void GetDipoleRectangularMatrixHorizontalR(Double_t Phi, Double_t Q, Double_t L, Double_t **M);                          // Bending in Horizontal direction for Dipole Rectangular Magnet Matrix First Order
+   void GetDipoleRectangularMatrixHorizontalR(Double_t p_nominal, Double_t p, Double_t Phi, Double_t Q, Double_t L, Double_t **M); // Bending in Horizontal direction for Dipole Rectangular Magnet Matrix First Order
    void GetDipoleRectangularMatrixHorizontalT(Double_t Phi, Double_t Q, Double_t L, Double_t ***M);                         // Bending in Horizontal direction for Dipole Rectangular Magnet Matrix Second Order
    void GetQuadrupoleMatrixR(Double_t K0, Double_t P, Double_t P0, Double_t L, Double_t **M);                               // Quadrupole Matrix First Order
    void GetQuadrupoleMatrixThinR(Double_t K0, Double_t P, Double_t P0, Double_t L, Double_t **M);                           // Quadrupole Matrix in Thin-Lens Approximation First Order
@@ -81,7 +81,7 @@ public :
    void MatrixMultiplication(Double_t **M_1, Double_t **M_2, Double_t **MULT);                                              // Matrix multiplication function
    void GetNewCoord(Double_t *X0, Double_t **R, Double_t ***T, Int_t order, Double_t *X);                                   // Matrix multiplication for the new coordinates
    bool GetNewCoordDrift(Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV);                                               // Get new coordinates after passing the DRIFT
-   bool GetNewCoordDipole(Double_t Phi, Double_t Q, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV);                    // Get new coordinates after passing the DIPOLE
+   bool GetNewCoordDipole(Double_t p_nominal, Double_t p, Double_t Phi, Double_t Q, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV);                    // Get new coordinates after passing the DIPOLE
    bool GetNewCoordQuadrupole(Double_t K0, Double_t P, Double_t P0, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV);    // Get new coordinates after passing the QUADRUPOLE
    bool GetNewCoordSextupole(Double_t K0, Double_t P, Double_t P0, Double_t L, Int_t order, Double_t *X0, Double_t *X, Double_t APH, Double_t APV);     // Get new coordinates after passing the SEXTUPOLE
    bool CheckApertureEllipse(Double_t *X0, Double_t *X, Double_t APH, Double_t APV);                                        // Check aperture at the Entrance and Exit of the element with ELLIPSOID shape
