@@ -4,6 +4,8 @@
 namespace Constants
 {
 const double _ctau_Lambda0 = 78.9e-3;           // [m]
+const double _ctau_Sigmap = 0.02404;           // [m]
+const double _ctau_Pionp = 7.8045;           // [m]
 // Position
 const double _cry3_51799_ua9_pos = 5180.8295;   // [m]
 const double _cry4_51799_ua9_pos = 5181.3245;   // [m]
@@ -63,10 +65,10 @@ const double _apv = 0.075;                      // [m]
 const bool _switch_magnets = true;
 
 const double _quadpix_xy_dim        = 0.03;                 // [m]
-const double _tr1_x_pos             = -0.031;               // [m]
+const double _tr1_x_pos             = -0.0158;              // [m]
 const double _tr1_y_pos             = 0.0;                  // [m]
 const double _tr1_s_pos             = _q1_51810_pos - 2.8;  // [m]
-const double _tr2_x_pos             = -0.075;               // [m]
+const double _tr2_x_pos             = 0.067;                // [m]
 const double _tr2_y_pos             = 0.0;                  // [m]
 const double _tr2_s_pos             = _q1_51810_pos + 5.0;  // [m]
 }

@@ -71,6 +71,8 @@ void function_3(TString output_file_name);
 void function_4(TString output_file_name);
 void function_5(TString input_filedir_name, TString output_file_name);
 void function_6(Double_t crystalOrientation);
+void function_7(Double_t crystalOrientation);
+void function_8(Double_t crystalOrientation);
 
 Bool_t isChanneled(Double_t particleAngleOut);
 void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph* gr_x, TGraph* gr_y, TGraph *gr_xp, TGraph *gr_yp, Bool_t print);
@@ -101,6 +103,12 @@ Int_t main(int argc, char* argv[])
         case 6:
           function_6(atof(argv[4]));
           break;
+        case 7:
+          function_7(atof(argv[4]));
+          break;
+        case 8:
+          function_8(atof(argv[4]));
+          break;
         default:
           cout<<"--> Nothing to do =)"<<endl;
           break;
@@ -115,6 +123,8 @@ Int_t main(int argc, char* argv[])
         cout<<"--> 4 -- function_4() : Lc products trajectories (random three-body decay)"<<endl;
         cout<<"--> 5 -- function_5() : Lc products trajectories (random two-body decay)"<<endl;
         cout<<"--> 6 -- function_6() : Lc products trajectories (random two-body decay, fixed momentum)"<<endl;
+        cout<<"--> 7 -- function_7() : Sigma+ products trajectories (random two-body decay, fixed momentum)"<<endl;
+        cout<<"--> 8 -- function_8() : single pion trajectory (fixed momentum and random angle)"<<endl;
         cout<<endl;
         cout<<"--> ERROR:: Wrong imput parameters number:"<<endl<<
               "--> [0] -- script name"<<endl<<
@@ -1612,7 +1622,7 @@ void function_5(TString input_filedir_name, TString output_file_name)
 void function_6(Double_t crystalOrientation)
 {
     //------------------------------//
-    const Int_t nLc     = 1e5;      // number of maximum Lc decays
+    const Int_t nLc     = 1e6;      // number of maximum Lc decays
     const Int_t nMom    = 45;       // number of diff. Lc mom.
     //------------------------------//
     //------------------------------//
@@ -1620,6 +1630,7 @@ void function_6(Double_t crystalOrientation)
     gettimeofday(&tp, NULL);
     long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
     TRandom3* rnd = new TRandom3(seed);
+    Int_t detected = 0;
     //-----------------------------------------//
     // Magnets section
     //-----------------------------------------//
@@ -1726,6 +1737,14 @@ void function_6(Double_t crystalOrientation)
         TH2D* h_65 = new TH2D("h_65","XY proton at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
         TH2D* h_66 = new TH2D("h_66","XY pion- at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
 
+        TH1D* h_67 = new TH1D("h_67","L_{0} theta",400000,-4.0,4.0);
+        TH1D* h_68 = new TH1D("h_68","pion+ theta",400000,-4.0,4.0);
+        TH1D* h_69 = new TH1D("h_69","proton theta",400000,-4.0,4.0);
+        TH1D* h_70 = new TH1D("h_70","pion- theta",400000,-4.0,4.0);
+
+        TH2D* h_71 = new TH2D("h_71","L_{0} theta vs pion+ theta",4000,-0.5,0.5,4000,-0.5,0.5);
+        TH2D* h_72 = new TH2D("h_72","proton theta vs pion- theta",4000,-0.5,0.5,4000,-0.5,0.5);
+
         for(Int_t j = 0; j < nLc; j++)
         {
             if(j%1000 == 0)
@@ -1741,6 +1760,8 @@ void function_6(Double_t crystalOrientation)
             h_1->Fill(pLc);
             h_10->Fill(thetaYLambdaCout);
 
+            detected = 0;
+
             if(decay->twoBody(pProd_1,mProd_1))
             {
                 //--------------------//
@@ -1750,6 +1771,8 @@ void function_6(Double_t crystalOrientation)
                 p_lambda0 = pProd_1[1].P();
                 h_2->Fill(p_lambda0);
                 h_24->Fill(pLc,p_lambda0);
+
+                h_67->Fill(pProd_1[1].Theta());
 
                 theta_x_lambda0 =
                         Constants::_beamAngleInitialAtCryPosition +
@@ -1771,7 +1794,7 @@ void function_6(Double_t crystalOrientation)
                 Double_t gamma_L0   = getGamma(mProd_2[0],p_lambda0);
                 Double_t beta_L0    = getBeta(gamma_L0);
                 Double_t prob       = rnd->Uniform(0.0,1.0);
-                Double_t cosTheta = pProd_1[1].CosTheta();
+                Double_t cosTheta   = pProd_1[1].CosTheta();
 
                 if(prob == 0)
                 {
@@ -1794,6 +1817,8 @@ void function_6(Double_t crystalOrientation)
                 h_3->Fill(p_pion_p);
                 h_25->Fill(pLc,p_pion_p);
 
+                h_68->Fill(pProd_1[2].Theta());
+
                 theta_x_pion_p =
                         Constants::_beamAngleInitialAtCryPosition +
                         Constants::_crystalAngle +
@@ -1810,6 +1835,7 @@ void function_6(Double_t crystalOrientation)
                 /*l*/     coord_x0_pion_p[4] = 0.0;
                 /*dp*/    coord_x0_pion_p[5] = 0.0;
 
+                h_71->Fill(pProd_1[2].Theta(),pProd_1[1].Theta());
                 //--------------------//
                 // Magnets
                 //--------------------//
@@ -1869,15 +1895,13 @@ void function_6(Double_t crystalOrientation)
                    gr_pion_p_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                    gr_pion_p_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
                 {
-                    h_61->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
-
                     // TRACKER 2
                     if(gr_pion_p_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
                        gr_pion_p_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
                        gr_pion_p_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                        gr_pion_p_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
                     {
-                        h_64->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                        detected++;
                     }
                 }
 
@@ -1892,6 +1916,8 @@ void function_6(Double_t crystalOrientation)
                     p_proton = pProd_2[1].P();
                     h_4->Fill(p_proton);
                     h_26->Fill(pLc,p_proton);
+
+                    h_69->Fill(pProd_2[1].Theta());
 
                     theta_x_proton = coord_x_lambda0[1] + TMath::ATan(pProd_2[1].Px()/pProd_2[1].Pz());
                     h_8->Fill(theta_x_proton);
@@ -1913,6 +1939,8 @@ void function_6(Double_t crystalOrientation)
                     h_5->Fill(p_pion_m);
                     h_27->Fill(pLc,p_pion_m);
 
+                    h_70->Fill(pProd_2[2].Theta());
+
                     theta_x_pion_m = coord_x_lambda0[1] + TMath::ATan(pProd_2[2].Px()/pProd_2[2].Pz());
                     h_9->Fill(theta_x_pion_m);
                     theta_y_pion_m = coord_x_lambda0[3] + TMath::ATan(pProd_2[2].Py()/pProd_2[2].Pz());
@@ -1924,6 +1952,8 @@ void function_6(Double_t crystalOrientation)
                     /*y'*/    coord_x0_pion_m[3] = theta_y_pion_m;      // [rad]
                     /*l*/     coord_x0_pion_m[4] = 0.0;
                     /*dp*/    coord_x0_pion_m[5] = 0.0;
+
+                    h_72->Fill(pProd_2[2].Theta(),pProd_2[1].Theta());
 
                     //--------------------//
                     // Magnets
@@ -1970,15 +2000,13 @@ void function_6(Double_t crystalOrientation)
                            gr_proton_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                            gr_proton_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
                         {
-                            h_62->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_y->Eval(Constants::_tr1_s_pos));
-
                             // TRACKER 2
                             if(gr_proton_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
                                gr_proton_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
                                gr_proton_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                                gr_proton_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
                             {
-                                h_65->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
+                                detected++;
                             }
                         }
 
@@ -1988,20 +2016,28 @@ void function_6(Double_t crystalOrientation)
                            gr_pion_m_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                            gr_pion_m_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)
                         {
-                            h_63->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_y->Eval(Constants::_tr1_s_pos));
-
                             // TRACKER 2
                             if(gr_pion_m_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
                                gr_pion_m_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
                                gr_pion_m_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
                                gr_pion_m_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
                             {
-                                h_66->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                                detected++;
                             }
                         }
 
                         h_34->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
                         h_35->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                    }
+
+                    if(detected == 3)
+                    {
+                        h_66->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                        h_63->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_y->Eval(Constants::_tr1_s_pos));
+                        h_65->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
+                        h_62->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_y->Eval(Constants::_tr1_s_pos));
+                        h_64->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                        h_61->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
                     }
 
                     gr_proton_x->Delete();
@@ -2057,8 +2093,493 @@ void function_6(Double_t crystalOrientation)
         h_64->Write();
         h_65->Write();
         h_66->Write();
+        h_67->Write();
+        h_68->Write();
+        h_69->Write();
+        h_70->Write();
+        h_71->Write();
+        h_72->Write();
+
+        file->Write();
+
+        h_1->Delete();
+        h_2->Delete();
+        h_3->Delete();
+        h_4->Delete();
+        h_5->Delete();
+        h_6->Delete();
+        h_7->Delete();
+        h_8->Delete();
+        h_9->Delete();
+        h_10->Delete();
+        h_11->Delete();
+        h_12->Delete();
+        h_13->Delete();
+        h_14->Delete();
+        h_18->Delete();
+        h_19->Delete();
+        h_24->Delete();
+        h_25->Delete();
+        h_26->Delete();
+        h_27->Delete();
+        h_29->Delete();
+        h_30->Delete();
+        h_31->Delete();
+        h_33->Delete();
+        h_34->Delete();
+        h_35->Delete();
+        h_61->Delete();
+        h_62->Delete();
+        h_63->Delete();
+        h_64->Delete();
+        h_65->Delete();
+        h_66->Delete();
+        h_67->Delete();
+        h_68->Delete();
+        h_69->Delete();
+        h_70->Delete();
+        h_71->Delete();
+        h_72->Delete();
 
         file->Close();
+        file->Delete();
+
+        cout<<endl<<"--> Output file: "<<output_file_name<<endl;
+    }
+
+    cout<<endl;
+
+    cout<<"--> _quadpix_xy_dim = "<<Constants::_quadpix_xy_dim<<endl;
+}
+
+void function_7(Double_t crystalOrientation)
+{
+    //------------------------------//
+    const Int_t nSp     = 1e6;      // number of maximum Sigma+ decays
+    const Int_t nMom    = 1;        // number of diff. Sigma+ mom.
+    //------------------------------//
+    //------------------------------//
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
+    TRandom3* rnd = new TRandom3(seed);
+    Int_t detected = 0;
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+
+    //-----------------------------------------//
+    // Decay section
+    //-----------------------------------------//
+    DecayClass* decay = new DecayClass();
+    //-----------------------------------------//
+
+    Double_t p_sigma = -999, charge_sigma = -999, theta_x_sigma = -999, theta_y_sigma = -999;
+    Double_t* coord_x0_sigma          = new Double_t[mtrx_size];
+    Double_t* coord_x_sigma           = new Double_t[mtrx_size];
+
+    Double_t p_pion_0 = -999, charge_pion_0 = -999, theta_x_pion_0 = -999, theta_y_pion_0 = -999;
+    Double_t* coord_x0_pion_0          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_0           = new Double_t[mtrx_size];
+
+    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+    Double_t* coord_x0_proton          = new Double_t[mtrx_size];
+    Double_t* coord_x_proton           = new Double_t[mtrx_size];
+
+    TLorentzVector pProd_1[3];
+    Double_t mProd_1[3];
+
+    Double_t s_decay_1 = 0;
+    Double_t s_decay_2 = 0;
+
+    // Mass
+    mProd_1[0] = 1.18937; // Sigma+ [GeV/c2]
+    mProd_1[1] = 0.93827; // Proton [GeV/c2]
+    mProd_1[2] = 0.13498; // Pion0  [GeV/c2]
+
+    cout<<endl;
+
+    Double_t pSp;
+    TString output_file_name;
+
+    for(Int_t i = 0; i < nMom; i++)
+    {
+        pSp = 80.0;//50.0 + i*10.0;// [GeV/c]
+        cout<<endl<<"--> pSp = "<<pSp<<" [GeV/c]"<<endl;
+        cout<<"--> crystalOrientation = "<<(Int_t)(crystalOrientation*1e3)<<" [mrad]"<<endl;
+        output_file_name = "./output/accelerator_";
+        output_file_name += (Int_t)(crystalOrientation*1e3);
+        output_file_name += "mrad_";
+        output_file_name += (Int_t)pSp;
+        output_file_name += "GeV.root";
+
+        TFile* file = new TFile(output_file_name.Data(),"RECREATE");
+
+        TH1D* h_1 = new TH1D("h_1","#Sigma^{+} momentum [GeV/c]",550,-50.0,500.0);
+        TH1D* h_2 = new TH1D("h_2","proton momentum [GeV/c]",550,-50.0,500.0);
+        TH1D* h_3 = new TH1D("h_3","pion0 momentum [GeV/c]",550,-50.0,500.0);
+
+        TH1D* h_4 = new TH1D("h_4","#Sigma^{+} thetaX",400000,-4.0,4.0);
+        TH1D* h_5 = new TH1D("h_5","proton thetaX",400000,-4.0,4.0);
+        TH1D* h_6 = new TH1D("h_6","pion0 thetaX",400000,-4.0,4.0);
+
+        TH1D* h_7 = new TH1D("h_7","#Sigma^{+} thetaY",400000,-4.0,4.0);
+        TH1D* h_8 = new TH1D("h_8","proton thetaY",400000,-4.0,4.0);
+        TH1D* h_9 = new TH1D("h_9","pion0 thetaY",400000,-4.0,4.0);
+
+        TH1D* h_10 = new TH1D("h_10","#Sigma^{+} decay length [m]",11000,-10,100);
+        TH1D* h_11 = new TH1D("h_11","#Sigma^{+} decay length (z-proj) [m]",11000,-10,100);
+
+        TH1D* h_12 = new TH1D("h_12","#Sigma^{+} theta",400000,-4.0,4.0);
+        TH1D* h_13 = new TH1D("h_13","proton theta",400000,-4.0,4.0);
+        TH1D* h_14 = new TH1D("h_14","pion0 theta",400000,-4.0,4.0);
+
+        TH2D* h_15 = new TH2D("h_15","XY #Sigma^{+} at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_16 = new TH2D("h_16","XY proton at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_17 = new TH2D("h_17","XY pion0 at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
+
+        TH2D* h_18 = new TH2D("h_18","XY #Sigma^{+} at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_19 = new TH2D("h_19","XY proton at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_20 = new TH2D("h_20","XY pion0 at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
+
+        TH2D* h_21 = new TH2D("h_21","XY #Sigma^{+} at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_22 = new TH2D("h_22","XY proton at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_23 = new TH2D("h_23","XY pion0 at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+
+        TH2D* h_24 = new TH2D("h_24","XY #Sigma^{+} at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_25 = new TH2D("h_25","XY proton at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_26 = new TH2D("h_26","XY pion0 at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+
+        for(Int_t j = 0; j < nSp; j++)
+        {
+            if(j%1000 == 0)
+            {
+                printf("\r--> Working: %3.1f",100.0*j/nSp);
+                fflush(stdout);
+            }
+
+            Double_t eSp = TMath::Sqrt(pSp*pSp + mProd_1[0]*mProd_1[0]); // [GeV/c]
+            pProd_1[0].SetPxPyPzE(0,0,pSp,eSp);
+            theta_y_sigma = gRandom->Gaus(0.0,4.0e-3);
+            theta_x_sigma = crystalOrientation;
+
+            h_1->Fill(pSp);
+            h_4->Fill(theta_x_sigma);
+            h_7->Fill(theta_y_sigma);
+            charge_sigma = 1.0;
+            /*x*/     coord_x0_sigma[0] = Constants::_beamPositionInitialAtCryPosition;     // [m]
+            /*x'*/    coord_x0_sigma[1] = theta_x_sigma;                                    // [rad]
+            /*y*/     coord_x0_sigma[2] = 0.0;                                              // [m]
+            /*y'*/    coord_x0_sigma[3] = theta_y_sigma;                                    // [rad]
+            /*l*/     coord_x0_sigma[4] = 0.0;
+            /*dp*/    coord_x0_sigma[5] = 0.0;
+
+            TGraph* gr_sigma_x = new TGraph();
+            TGraph* gr_sigma_xp = new TGraph();
+            TGraph* gr_sigma_y = new TGraph();
+            TGraph* gr_sigma_yp = new TGraph();
+            TString gr_sigma_x_name = "gr_sigma_x_";
+            TString gr_sigma_xp_name = "gr_sigma_xp_";
+            TString gr_sigma_y_name = "gr_sigma_y_";
+            TString gr_sigma_yp_name = "gr_sigma_yp_";
+            gr_sigma_x->SetName(gr_sigma_x_name.Data());
+            gr_sigma_xp->SetName(gr_sigma_xp_name.Data());
+            gr_sigma_y->SetName(gr_sigma_y_name.Data());
+            gr_sigma_yp->SetName(gr_sigma_yp_name.Data());
+
+            // RANDOM //
+            Double_t gamma_Sp   = getGamma(mProd_1[0],pSp);
+            Double_t beta_Sp    = getBeta(gamma_Sp);
+            Double_t prob       = rnd->Uniform(0.0,1.0);
+            Double_t ThetaSigmaP= TMath::Cos(TMath::ATan(TMath::Sqrt( TMath::Power(TMath::Tan(theta_x_sigma),2) + TMath::Power(TMath::Tan(theta_y_sigma),2) )));
+
+            if(prob == 0)
+            {
+                while( 1 )
+                {
+                    prob = rnd->Uniform(0.0,1.0);
+                    if(prob > 0) break;
+                }
+            }
+            s_decay_2 = Constants::_ctau_Sigmap*beta_Sp*gamma_Sp*TMath::Log(1.0/prob); // [m]
+            h_10->Fill(s_decay_2);
+            s_decay_2 = s_decay_2*TMath::Cos(ThetaSigmaP);
+            h_11->Fill(s_decay_2);
+            h_12->Fill(ThetaSigmaP);
+
+            passMagnets(s_decay_1,coord_x0_sigma,coord_x_sigma,p_sigma,charge_sigma,gr_sigma_x,gr_sigma_y,gr_sigma_xp,gr_sigma_yp,false);
+
+            if(decay->twoBody(pProd_1,mProd_1))
+            {
+                //--------------------//
+                // Proton
+                //--------------------//
+
+                p_proton = pProd_1[1].P();
+                h_2->Fill(p_proton);
+                h_13->Fill(pProd_1[1].Theta());
+
+                theta_x_proton = coord_x_sigma[1] + TMath::ATan(pProd_1[1].Px()/pProd_1[1].Pz());
+                h_5->Fill(theta_x_proton);
+                theta_y_proton = coord_x_sigma[3] + TMath::ATan(pProd_1[1].Py()/pProd_1[1].Pz());
+                h_8->Fill(theta_y_proton);
+                charge_proton = 1.0;
+                /*x*/     coord_x0_proton[0] = coord_x_sigma[0];    // [m]
+                /*x'*/    coord_x0_proton[1] = theta_x_proton;      // [rad]
+                /*y*/     coord_x0_proton[2] = coord_x_sigma[2];    // [m]
+                /*y'*/    coord_x0_proton[3] = theta_y_proton;      // [rad]
+                /*l*/     coord_x0_proton[4] = 0.0;
+                /*dp*/    coord_x0_proton[5] = 0.0;
+
+                //--------------------//
+                // Pion+
+                //--------------------//
+
+                p_pion_0 = pProd_1[2].P();
+                h_3->Fill(p_pion_0);
+                h_14->Fill(pProd_1[2].Theta());
+
+                theta_x_pion_0 = coord_x_sigma[1] + TMath::ATan(pProd_1[2].Px()/pProd_1[2].Pz());
+                h_6->Fill(theta_x_pion_0);
+                theta_y_pion_0 = coord_x_sigma[3] + TMath::ATan(pProd_1[2].Py()/pProd_1[2].Pz());
+                h_9->Fill(theta_y_pion_0);
+                charge_pion_0 = 0.0;
+                /*x*/     coord_x0_pion_0[0] = coord_x_sigma[0];    // [m]
+                /*x'*/    coord_x0_pion_0[1] = theta_x_pion_0;      // [rad]
+                /*y*/     coord_x0_pion_0[2] = coord_x_sigma[2];    // [m]
+                /*y'*/    coord_x0_pion_0[3] = theta_y_pion_0;      // [rad]
+                /*l*/     coord_x0_pion_0[4] = 0.0;
+                /*dp*/    coord_x0_pion_0[5] = 0.0;
+            }
+        }
+
+        h_1->Write();
+        h_2->Write();
+        h_3->Write();
+        h_4->Write();
+        h_5->Write();
+        h_6->Write();
+        h_7->Write();
+        h_8->Write();
+        h_9->Write();
+        h_10->Write();
+        h_11->Write();
+        h_12->Write();
+        h_13->Write();
+        h_14->Write();
+        h_18->Write();
+        h_19->Write();
+        h_24->Write();
+        h_25->Write();
+        h_26->Write();
+
+        file->Write();
+
+        h_1->Delete();
+        h_2->Delete();
+        h_3->Delete();
+        h_4->Delete();
+        h_5->Delete();
+        h_6->Delete();
+        h_7->Delete();
+        h_8->Delete();
+        h_9->Delete();
+        h_10->Delete();
+        h_11->Delete();
+        h_12->Delete();
+        h_13->Delete();
+        h_14->Delete();
+        h_18->Delete();
+        h_19->Delete();
+        h_24->Delete();
+        h_25->Delete();
+        h_26->Delete();
+
+        file->Close();
+        file->Delete();
+
+        cout<<endl<<"--> Output file: "<<output_file_name<<endl;
+    }
+
+    cout<<endl;
+
+    cout<<"--> _quadpix_xy_dim = "<<Constants::_quadpix_xy_dim<<endl;
+}
+
+void function_8(Double_t crystalOrientation)
+{
+    //------------------------------//
+    const Int_t nPion       = 1e3;  // number of maximum pion+ decays
+    const Int_t nMom        = 10;   // number of diff. pion+ mom.
+    //------------------------------//
+    //------------------------------//
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
+    TRandom3* rnd = new TRandom3(seed);
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+
+    Double_t p_pion_p = -999, charge_pion_p = -999, theta_x_pion_p = -999, theta_y_pion_p = -999;
+    Double_t* coord_x0_pion_p          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_p           = new Double_t[mtrx_size];
+
+    Double_t s_decay_1 = 0;
+    Double_t s_decay_2 = 0;
+
+    // Mass
+    Double_t mPion = 0.13957; // Pion+  [GeV/c2]
+
+    cout<<endl;
+
+    TString output_file_name;
+
+    for(Int_t i = 0; i < nMom; i++)
+    {
+        p_pion_p = 50.0 + i*50.0;// [GeV/c]
+        cout<<endl<<"--> p_pion_p = "<<p_pion_p<<" [GeV/c]"<<endl;
+        cout<<"--> crystalOrientation = "<<(Int_t)(crystalOrientation*1e3)<<" [mrad]"<<endl;
+        output_file_name = "./output/accelerator_";
+        output_file_name += (Int_t)(crystalOrientation*1e3);
+        output_file_name += "mrad_";
+        output_file_name += (Int_t)p_pion_p;
+        output_file_name += "GeV.root";
+
+        TFile* file = new TFile(output_file_name.Data(),"RECREATE");
+
+        TH1D* h_3 = new TH1D("h_3","pion+ momentum [GeV/c]",550,-50.0,500.0);
+        TH1D* h_7 = new TH1D("h_7","pion+ thetaX",400000,-4.0,4.0);
+        TH1D* h_12 = new TH1D("h_12","pion+ thetaY",400000,-4.0,4.0);
+        TH1D* h_18 = new TH1D("h_18","pion+ decay length [m]",101000,-100,10000);
+        TH1D* h_19 = new TH1D("h_19","pion+ decay length (z-proj) [m]",101000,-100,10000);
+        TH2D* h_29 = new TH2D("h_29","XY pion+ at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_33 = new TH2D("h_33","XY pion+ at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_61 = new TH2D("h_61","XY pion+ at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH2D* h_64 = new TH2D("h_64","XY pion+ at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
+        TH1D* h_68 = new TH1D("h_68","pion+ theta",400000,-4.0,4.0);
+
+        for(Int_t j = 0; j < nPion; j++)
+        {
+            if(j%1000 == 0)
+            {
+                printf("\r--> Working: %3.1f",100.0*j/nPion);
+                fflush(stdout);
+            }
+
+            theta_y_pion_p = gRandom->Gaus(0.0,1.0e-3);
+            theta_x_pion_p = gRandom->Gaus(crystalOrientation,TMath::Sqrt(2.0*16.0e-9/(p_pion_p)));
+
+            // RANDOM //
+            Double_t gamma   = getGamma(mPion,p_pion_p);
+            Double_t beta    = getBeta(gamma);
+            Double_t prob    = rnd->Uniform(0.0,1.0);
+            Double_t Theta   = 0.0;
+
+            if(prob == 0)
+            {
+                while( 1 )
+                {
+                    prob = rnd->Uniform(0.0,1.0);
+                    if(prob > 0) break;
+                }
+            }
+            s_decay_2 = Constants::_ctau_Pionp*beta*gamma*TMath::Log(1.0/prob); // [m]
+            h_18->Fill(s_decay_2);
+            s_decay_2 = s_decay_2*TMath::Cos(Theta);
+            h_19->Fill(s_decay_2);
+
+            //--------------------//
+            // Pion+
+            //--------------------//
+
+            h_3->Fill(p_pion_p);
+            h_68->Fill(Theta);
+
+            h_7->Fill(theta_x_pion_p);
+            h_12->Fill(theta_y_pion_p);
+            charge_pion_p = 1.0;
+            /*x*/     coord_x0_pion_p[0] = Constants::_beamPositionInitialAtCryPosition + gRandom->Gaus(0.0,1.0e-3);    // [m]
+            /*x'*/    coord_x0_pion_p[1] = theta_x_pion_p;// [rad]
+            /*y*/     coord_x0_pion_p[2] = gRandom->Gaus(0.0,1.0e-3);           // [m]
+            /*y'*/    coord_x0_pion_p[3] = theta_y_pion_p;  // [rad]
+            /*l*/     coord_x0_pion_p[4] = 0.0;
+            /*dp*/    coord_x0_pion_p[5] = 0.0;
+
+            TGraph* gr_pion_p_x = new TGraph();
+            TGraph* gr_pion_p_xp = new TGraph();
+            TGraph* gr_pion_p_y = new TGraph();
+            TGraph* gr_pion_p_yp = new TGraph();
+            TString gr_pion_p_x_name = "gr_pion_p_x_";
+            TString gr_pion_p_xp_name = "gr_pion_p_xp_";
+            TString gr_pion_p_y_name = "gr_pion_p_y_";
+            TString gr_pion_p_yp_name = "gr_pion_p_yp_";
+            gr_pion_p_x->SetName(gr_pion_p_x_name.Data());
+            gr_pion_p_xp->SetName(gr_pion_p_xp_name.Data());
+            gr_pion_p_y->SetName(gr_pion_p_y_name.Data());
+            gr_pion_p_yp->SetName(gr_pion_p_yp_name.Data());
+
+            passMagnets(s_decay_1,coord_x0_pion_p,coord_x_pion_p,p_pion_p,charge_pion_p,gr_pion_p_x,gr_pion_p_y,gr_pion_p_xp,gr_pion_p_yp,false);
+
+            h_29->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
+            h_33->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+
+            // TRACKER 1
+            /*if(gr_pion_p_x->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+               gr_pion_p_x->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+               gr_pion_p_y->Eval(Constants::_tr1_s_pos) <= Constants::_tr1_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+               gr_pion_p_y->Eval(Constants::_tr1_s_pos) >= Constants::_tr1_y_pos - Constants::_quadpix_xy_dim/2.0)*/
+            if(1)
+            {
+                // TRACKER 2
+                if(gr_pion_p_x->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_x_pos + Constants::_quadpix_xy_dim/2.0 &&
+                   gr_pion_p_x->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_x_pos - Constants::_quadpix_xy_dim/2.0 &&
+                   gr_pion_p_y->Eval(Constants::_tr2_s_pos) <= Constants::_tr2_y_pos + Constants::_quadpix_xy_dim/2.0 &&
+                   gr_pion_p_y->Eval(Constants::_tr2_s_pos) >= Constants::_tr2_y_pos - Constants::_quadpix_xy_dim/2.0)
+                {
+                    h_64->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                    h_61->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
+                }
+            }
+
+            gr_pion_p_x->Delete();
+            gr_pion_p_xp->Delete();
+            gr_pion_p_y->Delete();
+            gr_pion_p_yp->Delete();
+        }
+
+        h_3->Write();
+        h_7->Write();
+        h_12->Write();
+        h_18->Write();
+        h_19->Write();
+        h_29->Write();
+        h_33->Write();
+        h_61->Write();
+        h_64->Write();
+        h_68->Write();
+
+        file->Write();
+
+        h_3->Delete();
+        h_7->Delete();
+        h_12->Delete();
+        h_18->Delete();
+        h_19->Delete();
+        h_29->Delete();
+        h_33->Delete();
+        h_61->Delete();
+        h_64->Delete();
+        h_68->Delete();
+
+        file->Close();
+        file->Delete();
 
         cout<<endl<<"--> Output file: "<<output_file_name<<endl;
     }

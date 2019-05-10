@@ -49,6 +49,9 @@ void function_1();
 void function_2();
 void function_3();
 void function_4();
+void function_5();
+void function_6();
+void function_7();
 
 int plot()
 {
@@ -57,6 +60,9 @@ int plot()
     cout<<"--> function_2() -- twobody decay Lc -> L0 pi+ -> (p pi-) pi+"<<endl;
     cout<<"--> function_3() -- to plot angular distribution Lc"<<endl;
     cout<<"--> function_4() -- to plot detection fraction of the Lc"<<endl;
+    cout<<"--> function_5() -- to find the beam at TR1 and TR2, for fixed momentum, different angles"<<endl;
+    cout<<"--> function_6() -- to find the beam at TR1 and TR2, for fixed momentum, 20mrad angle"<<endl;
+    cout<<"--> function_7() -- to find the beam at TR1 and TR2, for fixed momentum, fixed angle Pion+"<<endl;
     return 0;
 }
 
@@ -941,4 +947,475 @@ void function_4()
     gr->GetXaxis()->SetLimits(1e-4,1e2);
     gr->SetMinimum(1e-7);
     gr->SetMaximum(1);
+}
+
+void function_5()
+{
+    const Int_t nMom = 45;       // number of diff. Lc mom.
+    const Int_t nAng = 7;       // number of diff. Lc mom.
+
+    Int_t pLc, crystalOrientation;
+    TString output_file_name, gr_name, c_name;
+
+    TGraphErrors* gr_29[nAng];
+    TGraphErrors* gr_30[nAng];
+    TGraphErrors* gr_31[nAng];
+    TGraphErrors* gr_33[nAng];
+    TGraphErrors* gr_34[nAng];
+    TGraphErrors* gr_35[nAng];
+
+    TCanvas* c_tr1[nAng];
+    TCanvas* c_tr2[nAng];
+
+    for(Int_t j = 6; j < nAng; j++)
+    {
+        crystalOrientation = j*5;
+        cout<<"--> crystalOrientation = "<<crystalOrientation<<" [mrad]"<<endl;
+
+        gr_29[j] = new TGraphErrors();
+        gr_30[j] = new TGraphErrors();
+        gr_31[j] = new TGraphErrors();
+        gr_33[j] = new TGraphErrors();
+        gr_34[j] = new TGraphErrors();
+        gr_35[j] = new TGraphErrors();
+
+        gr_29[j]->SetLineColor(kGreen+1);
+        gr_30[j]->SetLineColor(kRed);
+        gr_31[j]->SetLineColor(kBlue);
+        gr_33[j]->SetLineColor(kGreen+1);
+        gr_34[j]->SetLineColor(kRed);
+        gr_35[j]->SetLineColor(kBlue);
+
+        c_name = "c_";
+        c_name += crystalOrientation;
+        c_name += "mrad_TR1";
+        c_tr1[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        c_name = "c_";
+        c_name += crystalOrientation;
+        c_name += "mrad_TR2";
+        c_tr2[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_29[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_30[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_31[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_33[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_34[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_35[j]->SetName(gr_name.Data());
+
+        for(Int_t i = 0; i <= nMom; i++)
+        {
+            pLc = 50 + i*10;// [GeV/c]
+            cout<<endl<<"--> pLc = "<<pLc<<" [GeV/c]"<<endl;
+
+            output_file_name = "./output/accelerator_";
+            output_file_name += crystalOrientation;
+            output_file_name += "mrad_";
+            output_file_name += pLc;
+            output_file_name += "GeV.root";
+
+            TFile* _file0 = TFile::Open(output_file_name.Data());
+
+            TH2D* h_29 = (TH2D*)_file0->Get("h_29"); // pion+ at TR1
+            TH2D* h_30 = (TH2D*)_file0->Get("h_30"); // proton at TR1
+            TH2D* h_31 = (TH2D*)_file0->Get("h_31"); // pion- at TR1
+            TH2D* h_33 = (TH2D*)_file0->Get("h_33"); // pion+ at TR2
+            TH2D* h_34 = (TH2D*)_file0->Get("h_34"); // proton at TR2
+            TH2D* h_35 = (TH2D*)_file0->Get("h_35"); // pion- at TR2
+
+            TH1D* h_29_px = h_29->ProjectionX("h_29_px");
+            TH1D* h_30_px = h_30->ProjectionX("h_30_px");
+            TH1D* h_31_px = h_31->ProjectionX("h_31_px");
+            TH1D* h_33_px = h_33->ProjectionX("h_33_px");
+            TH1D* h_34_px = h_34->ProjectionX("h_34_px");
+            TH1D* h_35_px = h_35->ProjectionX("h_35_px");
+
+            gr_29[j]->SetPoint(gr_29[j]->GetN(),pLc,h_29_px->GetMean());
+            gr_29[j]->SetPointError(gr_29[j]->GetN()-1,1.0,h_29_px->GetMeanError());
+            gr_30[j]->SetPoint(gr_30[j]->GetN(),pLc,h_30_px->GetMean());
+            gr_30[j]->SetPointError(gr_30[j]->GetN()-1,1.0,h_30_px->GetMeanError());
+            gr_31[j]->SetPoint(gr_31[j]->GetN(),pLc,h_31_px->GetMean());
+            gr_31[j]->SetPointError(gr_31[j]->GetN()-1,1.0,h_31_px->GetMeanError());
+            gr_33[j]->SetPoint(gr_33[j]->GetN(),pLc,h_33_px->GetMean());
+            gr_33[j]->SetPointError(gr_33[j]->GetN()-1,1.0,h_33_px->GetMeanError());
+            gr_34[j]->SetPoint(gr_34[j]->GetN(),pLc,h_34_px->GetMean());
+            gr_34[j]->SetPointError(gr_34[j]->GetN()-1,1.0,h_34_px->GetMeanError());
+            gr_35[j]->SetPoint(gr_35[j] ->GetN(),pLc,h_35_px->GetMean());
+            gr_35[j]->SetPointError(gr_35[j]->GetN()-1,1.0,h_35_px->GetMeanError());
+
+            h_29->Delete();
+            h_30->Delete();
+            h_31->Delete();
+            h_33->Delete();
+            h_34->Delete();
+            h_35->Delete();
+
+            h_29_px->Delete();
+            h_30_px->Delete();
+            h_31_px->Delete();
+            h_33_px->Delete();
+            h_34_px->Delete();
+            h_35_px->Delete();
+        }
+
+        c_tr1[j]->cd();
+        gr_29[j]->SetMinimum(-0.2);
+        gr_29[j]->SetMaximum(0.2);
+        gr_29[j]->Draw("APL");
+        gr_30[j]->Draw("same");
+        gr_31[j]->Draw("same");
+
+        c_tr2[j]->cd();
+        gr_33[j]->SetMinimum(-0.2);
+        gr_33[j]->SetMaximum(0.2);
+        gr_33[j]->Draw("APL");
+        gr_34[j]->Draw("same");
+        gr_35[j]->Draw("same");
+
+        c_name = c_tr1[j]->GetName();
+        c_name += ".root";
+        c_tr1[j]->SaveAs(c_name.Data());
+
+        c_name = c_tr2[j]->GetName();
+        c_name += ".root";
+        c_tr2[j]->SaveAs(c_name.Data());
+    }
+}
+
+void function_6()
+{
+    const Int_t nMom = 45;       // number of diff. Lc mom.
+    const Int_t nAng = 1;        // number of diff. Lc mom.
+
+    Int_t pLc, crystalOrientation;
+    TString output_file_name, gr_name, c_name;
+
+    TGraphErrors* gr_29[nAng];
+    TGraphErrors* gr_30[nAng];
+    TGraphErrors* gr_31[nAng];
+    TGraphErrors* gr_33[nAng];
+    TGraphErrors* gr_34[nAng];
+    TGraphErrors* gr_35[nAng];
+
+    TGraphErrors* gr_deteff = new TGraphErrors();
+
+    TCanvas* c_tr1[nAng];
+    TCanvas* c_tr2[nAng];
+
+    for(Int_t j = 0; j < nAng; j++)
+    {
+        crystalOrientation = 20;
+        cout<<"--> crystalOrientation = "<<crystalOrientation<<" [mrad]"<<endl;
+
+        gr_29[j] = new TGraphErrors();
+        gr_30[j] = new TGraphErrors();
+        gr_31[j] = new TGraphErrors();
+        gr_33[j] = new TGraphErrors();
+        gr_34[j] = new TGraphErrors();
+        gr_35[j] = new TGraphErrors();
+
+        gr_29[j]->SetLineColor(kGreen+1);
+        gr_30[j]->SetLineColor(kRed);
+        gr_31[j]->SetLineColor(kBlue);
+        gr_33[j]->SetLineColor(kGreen+1);
+        gr_34[j]->SetLineColor(kRed);
+        gr_35[j]->SetLineColor(kBlue);
+
+        c_name = "c_";
+        c_name += crystalOrientation;
+        c_name += "mrad_TR1";
+        c_tr1[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        c_name = "c_";
+        c_name += crystalOrientation;
+        c_name += "mrad_TR2";
+        c_tr2[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_29[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_30[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_31[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_33[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_34[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_35[j]->SetName(gr_name.Data());
+
+        for(Int_t i = 0; i <= nMom; i++)
+        {
+            pLc = 50 + i*10;// [GeV/c]
+            cout<<endl<<"--> pLc = "<<pLc<<" [GeV/c]"<<endl;
+
+            output_file_name = "./output/accelerator_";
+            output_file_name += crystalOrientation;
+            output_file_name += "mrad_";
+            output_file_name += pLc;
+            output_file_name += "GeV.root";
+
+            TFile* _file0 = TFile::Open(output_file_name.Data());
+
+            TH2D* h_29 = (TH2D*)_file0->Get("h_29"); // pion+ at TR1
+            TH2D* h_30 = (TH2D*)_file0->Get("h_30"); // proton at TR1
+            TH2D* h_31 = (TH2D*)_file0->Get("h_31"); // pion- at TR1
+            TH2D* h_33 = (TH2D*)_file0->Get("h_33"); // pion+ at TR2
+            TH2D* h_34 = (TH2D*)_file0->Get("h_34"); // proton at TR2
+            TH2D* h_35 = (TH2D*)_file0->Get("h_35"); // pion- at TR2
+
+            TH1D* h_1 = (TH1D*)_file0->Get("h_1"); // L_{c} momentum [GeV/c]
+            TH2D* h_66 = (TH2D*)_file0->Get("h_66"); // pion- at TR2 (detected)
+
+            TH1D* h_29_px = h_29->ProjectionX("h_29_px");
+            TH1D* h_30_px = h_30->ProjectionX("h_30_px");
+            TH1D* h_31_px = h_31->ProjectionX("h_31_px");
+            TH1D* h_33_px = h_33->ProjectionX("h_33_px");
+            TH1D* h_34_px = h_34->ProjectionX("h_34_px");
+            TH1D* h_35_px = h_35->ProjectionX("h_35_px");
+
+            gr_29[j]->SetPoint(gr_29[j]->GetN(),pLc,h_29_px->GetMean());
+            gr_29[j]->SetPointError(gr_29[j]->GetN()-1,1.0,h_29_px->GetMeanError());
+            gr_30[j]->SetPoint(gr_30[j]->GetN(),pLc,h_30_px->GetMean());
+            gr_30[j]->SetPointError(gr_30[j]->GetN()-1,1.0,h_30_px->GetMeanError());
+            gr_31[j]->SetPoint(gr_31[j]->GetN(),pLc,h_31_px->GetMean());
+            gr_31[j]->SetPointError(gr_31[j]->GetN()-1,1.0,h_31_px->GetMeanError());
+            gr_33[j]->SetPoint(gr_33[j]->GetN(),pLc,h_33_px->GetMean());
+            gr_33[j]->SetPointError(gr_33[j]->GetN()-1,1.0,h_33_px->GetMeanError());
+            gr_34[j]->SetPoint(gr_34[j]->GetN(),pLc,h_34_px->GetMean());
+            gr_34[j]->SetPointError(gr_34[j]->GetN()-1,1.0,h_34_px->GetMeanError());
+            gr_35[j]->SetPoint(gr_35[j] ->GetN(),pLc,h_35_px->GetMean());
+            gr_35[j]->SetPointError(gr_35[j]->GetN()-1,1.0,h_35_px->GetMeanError());
+
+            h_29->Delete();
+            h_30->Delete();
+            h_31->Delete();
+            h_33->Delete();
+            h_34->Delete();
+            h_35->Delete();
+
+            h_29_px->Delete();
+            h_30_px->Delete();
+            h_31_px->Delete();
+            h_33_px->Delete();
+            h_34_px->Delete();
+            h_35_px->Delete();
+
+            Double_t n1 = h_66->GetEntries();
+            Double_t n2 = h_1->GetEntries();
+            gr_deteff->SetPoint(gr_deteff->GetN(),pLc,(Double_t)n1/n2);
+            gr_deteff->SetPointError(gr_deteff->GetN()-1,1.0,TMath::Sqrt(TMath::Power(TMath::Sqrt(n1)/n2,2) +
+                                                                         TMath::Power(n1*TMath::Sqrt(n2)/(n2*n2),2)));
+        }
+
+        c_tr1[j]->cd();
+        gr_29[j]->SetMinimum(-0.2);
+        gr_29[j]->SetMaximum(0.2);
+        gr_29[j]->Draw("APL");
+        gr_30[j]->Draw("same");
+        gr_31[j]->Draw("same");
+
+        c_tr2[j]->cd();
+        gr_33[j]->SetMinimum(-0.2);
+        gr_33[j]->SetMaximum(0.2);
+        gr_33[j]->Draw("APL");
+        gr_34[j]->Draw("same");
+        gr_35[j]->Draw("same");
+
+        c_name = c_tr1[j]->GetName();
+        c_name += ".root";
+        c_tr1[j]->SaveAs(c_name.Data());
+
+        c_name = c_tr2[j]->GetName();
+        c_name += ".root";
+        c_tr2[j]->SaveAs(c_name.Data());
+    }
+
+    TCanvas* c_deteff = new TCanvas("c_deteff","c_deteff");
+    c_deteff->cd();
+    gr_deteff->Draw("APL");
+    c_deteff->SaveAs("c_deteff_20mrad.root");
+}
+
+void function_7()
+{
+    const Int_t nMom = 10;       // number of diff. Lc mom.
+    const Int_t nAng = 1;        // number of diff. Lc mom.
+
+    Int_t pLc, crystalOrientation;
+    TString output_file_name, gr_name, c_name;
+
+    TGraphErrors* gr_29[nAng];
+    TGraphErrors* gr_30[nAng];
+    TGraphErrors* gr_31[nAng];
+    TGraphErrors* gr_33[nAng];
+    TGraphErrors* gr_34[nAng];
+    TGraphErrors* gr_35[nAng];
+
+    TGraphErrors* gr_deteff = new TGraphErrors();
+
+    TCanvas* c_tr1[nAng];
+    TCanvas* c_tr2[nAng];
+
+    for(Int_t j = 0; j < nAng; j++)
+    {
+        crystalOrientation = 10;
+        cout<<"--> crystalOrientation = "<<crystalOrientation<<" [mrad]"<<endl;
+
+        gr_29[j] = new TGraphErrors();
+        gr_30[j] = new TGraphErrors();
+        gr_31[j] = new TGraphErrors();
+        gr_33[j] = new TGraphErrors();
+        gr_34[j] = new TGraphErrors();
+        gr_35[j] = new TGraphErrors();
+
+        gr_29[j]->SetLineColor(kGreen+1);
+        gr_30[j]->SetLineColor(kRed);
+        gr_31[j]->SetLineColor(kBlue);
+        gr_33[j]->SetLineColor(kGreen+1);
+        gr_34[j]->SetLineColor(kRed);
+        gr_35[j]->SetLineColor(kBlue);
+
+        c_name = "c_";
+        c_name += TMath::Abs(crystalOrientation);
+        c_name += "mrad_TR1";
+        c_tr1[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        c_name = "c_";
+        c_name += TMath::Abs(crystalOrientation);
+        c_name += "mrad_TR2";
+        c_tr2[j] = new TCanvas(c_name.Data(),c_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_29[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_30[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR1";
+        gr_31[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_p_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_33[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_proton_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_34[j]->SetName(gr_name.Data());
+
+        gr_name = "gr_pion_m_";
+        gr_name += crystalOrientation;
+        gr_name += "mrad_TR2";
+        gr_35[j]->SetName(gr_name.Data());
+
+        for(Int_t i = 0; i < nMom; i++)
+        {
+            pLc = 50 + i*50;// [GeV/c]
+            cout<<endl<<"--> pLc = "<<pLc<<" [GeV/c]"<<endl;
+
+            output_file_name = "./output/accelerator_";
+            output_file_name += crystalOrientation;
+            output_file_name += "mrad_";
+            output_file_name += pLc;
+            output_file_name += "GeV.root";
+
+            TFile* _file0 = TFile::Open(output_file_name.Data());
+
+            TH2D* h_29 = (TH2D*)_file0->Get("h_29"); // pion+ at TR1
+            TH2D* h_33 = (TH2D*)_file0->Get("h_33"); // pion+ at TR2
+            TH1D* h_3 = (TH1D*)_file0->Get("h_3");
+            TH2D* h_64 = (TH2D*)_file0->Get("h_64");
+
+            TH1D* h_29_px = h_29->ProjectionX("h_29_px");
+            TH1D* h_33_px = h_33->ProjectionX("h_33_px");
+
+            gr_29[j]->SetPoint(gr_29[j]->GetN(),pLc,h_29_px->GetMean());
+            gr_29[j]->SetPointError(gr_29[j]->GetN()-1,1.0,h_29_px->GetMeanError());
+            gr_33[j]->SetPoint(gr_33[j]->GetN(),pLc,h_33_px->GetMean());
+            gr_33[j]->SetPointError(gr_33[j]->GetN()-1,1.0,h_33_px->GetMeanError());
+
+            h_29->Delete();
+            h_33->Delete();
+
+            h_29_px->Delete();
+            h_33_px->Delete();
+
+            Double_t n1 = h_64->GetEntries();
+            Double_t n2 = h_3->GetEntries();
+            gr_deteff->SetPoint(gr_deteff->GetN(),pLc,(Double_t)n1/n2);
+            gr_deteff->SetPointError(gr_deteff->GetN()-1,1.0,TMath::Sqrt(TMath::Power(TMath::Sqrt(n1)/n2,2) +
+                                                                         TMath::Power(n1*TMath::Sqrt(n2)/(n2*n2),2)));
+        }
+
+        c_tr1[j]->cd();
+        gr_29[j]->SetMinimum(-0.2);
+        gr_29[j]->SetMaximum(0.2);
+        gr_29[j]->Draw("APL");
+
+        c_tr2[j]->cd();
+        gr_33[j]->SetMinimum(-0.2);
+        gr_33[j]->SetMaximum(0.2);
+        gr_33[j]->Draw("APL");
+
+        c_name = c_tr1[j]->GetName();
+        c_name += ".root";
+        c_tr1[j]->SaveAs(c_name.Data());
+
+        c_name = c_tr2[j]->GetName();
+        c_name += ".root";
+        c_tr2[j]->SaveAs(c_name.Data());
+    }
+
+    TCanvas* c_deteff = new TCanvas("c_deteff","c_deteff");
+    c_deteff->cd();
+    gr_deteff->Draw("APL");
+    c_deteff->SaveAs("c_deteff_10mrad.root");
 }

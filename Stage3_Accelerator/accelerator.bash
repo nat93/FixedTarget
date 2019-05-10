@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# AcceLerator Beam Optics (ALBO)
+# Accelerator Beam Optics (AlBO)
 
 make clean; make accelerator;
 
 inputRootFileDir="/media/andrii/F492773C92770302/SPS_SimulationData/"
-outputRootFile="accelerator_10mrad_all.root"
+outputRootFile="accelerator_pion_10mrad.root"
 
-./accelerator $inputRootFileDir $outputRootFile 6 0.010
+./accelerator $inputRootFileDir $outputRootFile 8 0.010
 

@@ -6,12 +6,12 @@ Main:timesAllowErrors       = 10000 ! abort run after this many flawed events
 Main:showChangedSettings    = on    ! print changed flags/modes/parameters
 Main:showAllStatistics      = on    ! more statistics on multiple interactions
 
-SigmaProcess:renormScale2   = 3
-SigmaProcess:factorScale2   = 3
-SigmaProcess:renormMultFac  = 2     ! 2mT
-SigmaProcess:factorMultFac  = 2     ! 2mT
-StringFlav:mesonCvector     = 1.5
-StringFlav:mesonBvector     = 3
+#SigmaProcess:renormScale2   = 3
+#SigmaProcess:factorScale2   = 3
+#SigmaProcess:renormMultFac  = 2     ! 2mT
+#SigmaProcess:factorMultFac  = 2     ! 2mT
+#StringFlav:mesonCvector     = 1.5
+#StringFlav:mesonBvector     = 3
 
 HardQCD:hardccbar           = on    ! heavy flavour subset qqbartoccbar and ggtoccbar
 
