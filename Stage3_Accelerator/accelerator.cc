@@ -73,15 +73,18 @@ void function_5(TString input_filedir_name, TString output_file_name);
 void function_6(Double_t crystalOrientation);
 void function_7(Double_t crystalOrientation);
 void function_8(Double_t crystalOrientation);
+void function_9(TString input_filedir_name, TString output_file_name, Int_t nRuns, Int_t CHBKGst);
+void function_10(TString input_filedir_name, TString output_file_name, Int_t nRuns, Int_t CHBKGst);
 
 Bool_t isChanneled(Double_t particleAngleOut);
 void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph* gr_x, TGraph* gr_y, TGraph *gr_xp, TGraph *gr_yp, Bool_t print);
+void passMagnetsSeptum(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph *gr_x, TGraph *gr_y, TGraph *gr_xp, TGraph *gr_yp, Bool_t print);
 Double_t getGamma(Double_t mass, Double_t pmag);
 Double_t getBeta(Double_t gamma);
 
 Int_t main(int argc, char* argv[])
 {
-    if(argc == 5)
+    if(argc == 7)
     {
         switch ( atoi(argv[3]) )
         {
@@ -109,6 +112,12 @@ Int_t main(int argc, char* argv[])
         case 8:
           function_8(atof(argv[4]));
           break;
+        case 9:
+          function_9(argv[1],argv[2],atoi(argv[5]),atoi(argv[6]));
+          break;
+        case 10:
+          function_10(argv[1],argv[2],atoi(argv[5]),atoi(argv[6]));
+          break;
         default:
           cout<<"--> Nothing to do =)"<<endl;
           break;
@@ -117,21 +126,25 @@ Int_t main(int argc, char* argv[])
     else
     {
         cout<<endl;
-        cout<<"--> 1 -- function_1() : single proton trajectory (-200 urad deflection)"<<endl;
-        cout<<"--> 2 -- function_2() : Lc products trajectories"<<endl;
-        cout<<"--> 3 -- function_3() : for random parameters"<<endl;
-        cout<<"--> 4 -- function_4() : Lc products trajectories (random three-body decay)"<<endl;
-        cout<<"--> 5 -- function_5() : Lc products trajectories (random two-body decay)"<<endl;
-        cout<<"--> 6 -- function_6() : Lc products trajectories (random two-body decay, fixed momentum)"<<endl;
-        cout<<"--> 7 -- function_7() : Sigma+ products trajectories (random two-body decay, fixed momentum)"<<endl;
-        cout<<"--> 8 -- function_8() : single pion trajectory (fixed momentum and random angle)"<<endl;
+        cout<<"--> 1    -- function_1()     : single proton trajectory (-200 urad deflection)"<<endl;
+        cout<<"--> 2    -- function_2()     : Lc products trajectories"<<endl;
+        cout<<"--> 3    -- function_3()     : for random parameters"<<endl;
+        cout<<"--> 4    -- function_4()     : Lc products trajectories (random three-body decay)"<<endl;
+        cout<<"--> 5    -- function_5()     : Lc products trajectories (random two-body decay) [all]"<<endl;
+        cout<<"--> 6    -- function_6()     : Lc products trajectories (random two-body decay, fixed momentum)"<<endl;
+        cout<<"--> 7    -- function_7()     : Sigma+ products trajectories (random two-body decay, fixed momentum)"<<endl;
+        cout<<"--> 8    -- function_8()     : single pion trajectory (fixed momentum and random angle)"<<endl;
+        cout<<"--> 9    -- function_9()     : Lc products trajectories (random two-body decay) [signal+background] quad. conf."<<endl;
+        cout<<"--> 10   -- function_10()    : Lc products trajectories (random two-body decay) [signal+background] sept. conf."<<endl;
         cout<<endl;
         cout<<"--> ERROR:: Wrong imput parameters number:"<<endl<<
               "--> [0] -- script name"<<endl<<
               "--> [1] -- input filename"<<endl<<
               "--> [2] -- output filename"<<endl<<
               "--> [3] -- function id"<<endl<<
-              "--> [4] -- crystal orientation angle [rad]"<<endl;
+              "--> [4] -- crystal orientation angle [rad]"<<endl<<
+              "--> [5] -- number of runs (>0)"<<endl<<
+              "--> [6] -- signal or background status (1 || 2)"<<endl;
         return -1;
 
     }
@@ -1109,7 +1122,7 @@ void function_5(TString input_filedir_name, TString output_file_name)
 
         if(_isGenerated && _isTarget && _isCrystal)
         {
-            thetaXLambdaCout = TMath::ATan(_Px_Lc_2/_Pz_Lc_2) - TMath::ATan(_Px_Lc_1/_Pz_Lc_1);            
+            thetaXLambdaCout = TMath::ATan(_Px_Lc_2/_Pz_Lc_2) - TMath::ATan(_Px_Lc_1/_Pz_Lc_1);
 
             h_20->Fill(thetaXLambdaCout);            
 
@@ -2163,7 +2176,6 @@ void function_7(Double_t crystalOrientation)
     gettimeofday(&tp, NULL);
     long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
     TRandom3* rnd = new TRandom3(seed);
-    Int_t detected = 0;
     //-----------------------------------------//
     // Magnets section
     //-----------------------------------------//
@@ -2181,13 +2193,11 @@ void function_7(Double_t crystalOrientation)
     Double_t* coord_x0_sigma          = new Double_t[mtrx_size];
     Double_t* coord_x_sigma           = new Double_t[mtrx_size];
 
-    Double_t p_pion_0 = -999, charge_pion_0 = -999, theta_x_pion_0 = -999, theta_y_pion_0 = -999;
+    Double_t p_pion_0 = -999, theta_x_pion_0 = -999, theta_y_pion_0 = -999;
     Double_t* coord_x0_pion_0          = new Double_t[mtrx_size];
-    Double_t* coord_x_pion_0           = new Double_t[mtrx_size];
 
-    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+    Double_t p_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
     Double_t* coord_x0_proton          = new Double_t[mtrx_size];
-    Double_t* coord_x_proton           = new Double_t[mtrx_size];
 
     TLorentzVector pProd_1[3];
     Double_t mProd_1[3];
@@ -2237,17 +2247,8 @@ void function_7(Double_t crystalOrientation)
         TH1D* h_13 = new TH1D("h_13","proton theta",400000,-4.0,4.0);
         TH1D* h_14 = new TH1D("h_14","pion0 theta",400000,-4.0,4.0);
 
-        TH2D* h_15 = new TH2D("h_15","XY #Sigma^{+} at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
-        TH2D* h_16 = new TH2D("h_16","XY proton at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
-        TH2D* h_17 = new TH2D("h_17","XY pion0 at TR1",4000,-0.2,0.2,4000,-0.2,0.2);
-
         TH2D* h_18 = new TH2D("h_18","XY #Sigma^{+} at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
         TH2D* h_19 = new TH2D("h_19","XY proton at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
-        TH2D* h_20 = new TH2D("h_20","XY pion0 at TR2",4000,-0.2,0.2,4000,-0.2,0.2);
-
-        TH2D* h_21 = new TH2D("h_21","XY #Sigma^{+} at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
-        TH2D* h_22 = new TH2D("h_22","XY proton at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
-        TH2D* h_23 = new TH2D("h_23","XY pion0 at TR1 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
 
         TH2D* h_24 = new TH2D("h_24","XY #Sigma^{+} at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
         TH2D* h_25 = new TH2D("h_25","XY proton at TR2 (detected)",4000,-0.2,0.2,4000,-0.2,0.2);
@@ -2326,7 +2327,6 @@ void function_7(Double_t crystalOrientation)
                 h_5->Fill(theta_x_proton);
                 theta_y_proton = coord_x_sigma[3] + TMath::ATan(pProd_1[1].Py()/pProd_1[1].Pz());
                 h_8->Fill(theta_y_proton);
-                charge_proton = 1.0;
                 /*x*/     coord_x0_proton[0] = coord_x_sigma[0];    // [m]
                 /*x'*/    coord_x0_proton[1] = theta_x_proton;      // [rad]
                 /*y*/     coord_x0_proton[2] = coord_x_sigma[2];    // [m]
@@ -2346,7 +2346,6 @@ void function_7(Double_t crystalOrientation)
                 h_6->Fill(theta_x_pion_0);
                 theta_y_pion_0 = coord_x_sigma[3] + TMath::ATan(pProd_1[2].Py()/pProd_1[2].Pz());
                 h_9->Fill(theta_y_pion_0);
-                charge_pion_0 = 0.0;
                 /*x*/     coord_x0_pion_0[0] = coord_x_sigma[0];    // [m]
                 /*x'*/    coord_x0_pion_0[1] = theta_x_pion_0;      // [rad]
                 /*y*/     coord_x0_pion_0[2] = coord_x_sigma[2];    // [m]
@@ -2587,6 +2586,1505 @@ void function_8(Double_t crystalOrientation)
     cout<<endl;
 
     cout<<"--> _quadpix_xy_dim = "<<Constants::_quadpix_xy_dim<<endl;
+}
+
+void function_9(TString input_filedir_name, TString output_file_name, Int_t nRuns, Int_t CHBKGst)
+{
+    //-----------------------------------------//
+    Bool_t plot_graph   = kFALSE;//kTRUE;      // to plot graphs
+    //-----------------------------------------//
+    // Read file
+    //-----------------------------------------//
+    cout<<"--> nRuns = "<<nRuns<<" | CHBKG = "<<CHBKGst<<endl;
+
+    Double_t _Px;
+    Double_t _Py;
+    Double_t _Pz;
+    Double_t _E;
+    Double_t _mass;
+    Int_t _CHBKG;
+
+    TChain* fChain1 = new TChain("TreeCommon");
+    TString input_file_name = input_filedir_name;
+    input_file_name += "common_histo_output_function_4.root";
+    if(fChain1->Add(input_file_name.Data()))
+    {
+        cout<<"--> File: "<<input_file_name<<" has been added"<<endl;
+    }
+    else
+    {
+        assert(0);
+    }
+
+    fChain1->SetBranchAddress("Px",           &_Px);
+    fChain1->SetBranchAddress("Py",           &_Py);
+    fChain1->SetBranchAddress("Pz",           &_Pz);
+    fChain1->SetBranchAddress("E",            &_E);
+    fChain1->SetBranchAddress("mass",         &_mass);
+    fChain1->SetBranchAddress("CHBKG",        &_CHBKG);
+
+    Long64_t nEntries = fChain1->GetEntries();
+    cout<<"--> nEntries: "<<nEntries<<endl;
+
+    //-----------------------------------------//
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
+    TRandom3* rnd = new TRandom3(seed);
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+
+    //-----------------------------------------//
+    // Decay section
+    //-----------------------------------------//
+    DecayClass* decay = new DecayClass();
+    //-----------------------------------------//
+
+    Double_t p_lambda0 = -999, charge_lambda0 = -999, theta_x_lambda0 = -999, theta_y_lambda0 = -999;
+    Double_t* coord_x0_lambda0          = new Double_t[mtrx_size];
+    Double_t* coord_x_lambda0           = new Double_t[mtrx_size];
+
+    Double_t p_pion_p = -999, charge_pion_p = -999, theta_x_pion_p = -999, theta_y_pion_p = -999;
+    Double_t* coord_x0_pion_p          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_p           = new Double_t[mtrx_size];
+
+    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+    Double_t* coord_x0_proton          = new Double_t[mtrx_size];
+    Double_t* coord_x_proton           = new Double_t[mtrx_size];
+
+    Double_t p_pion_m = -999, charge_pion_m = -999, theta_x_pion_m = -999, theta_y_pion_m = -999;
+    Double_t* coord_x0_pion_m          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_m           = new Double_t[mtrx_size];
+
+    TLorentzVector pProd_1[3];
+    TLorentzVector pProd_2[3];
+    Double_t mProd_1[3];
+    Double_t mProd_2[3];
+
+    Double_t s_decay_1 = 0; // LambdaC+ decay position
+    Double_t s_decay_2 = 0; // Lambda0 decay position
+
+    // Mass
+    mProd_1[0] = 2.28646; // Lc+    [GeV/c2]
+    mProd_1[1] = 1.11568; // L0     [GeV/c2]
+    mProd_1[2] = 0.13957; // Pion+  [GeV/c2]
+
+    mProd_2[0] = 1.11568; // L0     [GeV/c2]
+    mProd_2[1] = 0.93827; // Proton [GeV/c2]
+    mProd_2[2] = 0.13957; // Pion-  [GeV/c2]
+
+    TFile* _file = new TFile(output_file_name.Data(),"RECREATE");
+
+    TH1D* h_1 = new TH1D("h_1","L_{c} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_2 = new TH1D("h_2","L_{c} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_3 = new TH1D("h_3","L_{c} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_4 = new TH1D("h_4","L_{c} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_5 = new TH1D("h_5","L_{c} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_6 = new TH1D("h_6","L_{0} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_7 = new TH1D("h_7","L_{0} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_8 = new TH1D("h_8","L_{0} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_9 = new TH1D("h_9","L_{0} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_10 = new TH1D("h_10","L_{0} #theta_{y} in [rad]",40000,-4.0,4.0);
+    TH1D* h_11 = new TH1D("h_11","L_{0} decay length (z-proj) in [m] all",110000,-10,100);
+    TH1D* h_12 = new TH1D("h_12","L_{0} decay length (z-proj) in [m] decay before QF",110000,-10,100);
+
+    TH1D* h_13 = new TH1D("h_13","#pi^{+} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_14 = new TH1D("h_14","#pi^{+} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_15 = new TH1D("h_15","#pi^{+} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_16 = new TH1D("h_16","#pi^{+} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_17 = new TH1D("h_17","#pi^{+} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_18 = new TH1D("h_18","proton momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_19 = new TH1D("h_19","proton #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_20 = new TH1D("h_20","proton #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_21 = new TH1D("h_21","proton #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_22 = new TH1D("h_22","proton #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_23 = new TH1D("h_23","#pi^{-} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_24 = new TH1D("h_24","#pi^{-} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_25 = new TH1D("h_25","#pi^{-} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_26 = new TH1D("h_26","#pi^{-} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_27 = new TH1D("h_27","#pi^{-} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH2D* h_28 = new TH2D("h_28","XY L_{0} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_29 = new TH2D("h_29","XpYp L_{0} at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_30 = new TH2D("h_30","XY #pi^{+} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_31 = new TH2D("h_31","XpYp #pi^{+} at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_32 = new TH2D("h_32","XY proton at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_33 = new TH2D("h_33","XpYp proton at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_34 = new TH2D("h_34","XY #pi^{-} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_35 = new TH2D("h_35","XpYp #pi^{-} at TR1 in [rad]",400,-4,4,400,-4,4);
+
+    TH2D* h_36 = new TH2D("h_36","XY L_{0} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_37 = new TH2D("h_37","XpYp L_{0} at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_38 = new TH2D("h_38","XY #pi^{+} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_39 = new TH2D("h_39","XpYp #pi^{+} at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_40 = new TH2D("h_40","XY proton at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_41 = new TH2D("h_41","XpYp proton at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_42 = new TH2D("h_42","XY #pi^{-} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_43 = new TH2D("h_43","XpYp #pi^{-} at TR2 in [rad]",400,-4,4,400,-4,4);
+
+    TH2D* hh_28 = new TH2D("hh_28","XY L_{0} at QF-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_30 = new TH2D("hh_30","XY #pi^{+} at QF-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_32 = new TH2D("hh_32","XY proton at QF-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_34 = new TH2D("hh_34","XY #pi^{-} at QF-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    TH2D* hhh_28 = new TH2D("hhh_28","XY L_{0} at QF in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_30 = new TH2D("hhh_30","XY #pi^{+} at QF in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_32 = new TH2D("hhh_32","XY proton at QF in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_34 = new TH2D("hhh_34","XY #pi^{-} at QF in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    TH2D* hhhh_28 = new TH2D("hhhh_28","XY L_{0} at QF+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_30 = new TH2D("hhhh_30","XY #pi^{+} at QF+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_32 = new TH2D("hhhh_32","XY proton at QF+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_34 = new TH2D("hhhh_34","XY #pi^{-} at QF+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    Double_t posXpionM, posXproton, posXpionP;
+    Double_t posYpionM, posYproton, posYpionP;
+
+    TTree* treeTr1 = new TTree("TreeTR1", "Tree with Lc+ products at TR1");
+    treeTr1->Branch("posXpionM",    &posXpionM,     "posXpionM/D");
+    treeTr1->Branch("posYpionM",    &posYpionM,     "posYpionM/D");
+    treeTr1->Branch("posXproton",   &posXproton,    "posXproton/D");
+    treeTr1->Branch("posYproton",   &posYproton,    "posYproton/D");
+    treeTr1->Branch("posXpionP",    &posXpionP,     "posXpionP/D");
+    treeTr1->Branch("posYpionP",    &posYpionP,     "posYpionP/D");
+
+    TTree* treeTr2 = new TTree("TreeTR2", "Tree with Lc+ products at TR2");
+    treeTr2->Branch("posXpionM",    &posXpionM,     "posXpionM/D");
+    treeTr2->Branch("posYpionM",    &posYpionM,     "posYpionM/D");
+    treeTr2->Branch("posXproton",   &posXproton,    "posXproton/D");
+    treeTr2->Branch("posYproton",   &posYproton,    "posYproton/D");
+    treeTr2->Branch("posXpionP",    &posXpionP,     "posXpionP/D");
+    treeTr2->Branch("posYpionP",    &posYpionP,     "posYpionP/D");
+
+    cout<<endl;
+    Double_t thetaXLambdaCout, thetaYLambdaCout, thetaLambdaCout, phiLambdaCout;
+
+    TVector3* pLc = new TVector3();
+
+    Double_t xTmp, yTmp, gamma_L0, beta_L0, prob, cosTheta;
+
+    TGraph* gr_lambda0_x = new TGraph();
+    TGraph* gr_lambda0_xp = new TGraph();
+    TGraph* gr_lambda0_y = new TGraph();
+    TGraph* gr_lambda0_yp = new TGraph();
+    TString gr_lambda0_x_name = "gr_lambda0_x_";
+    TString gr_lambda0_xp_name = "gr_lambda0_xp_";
+    TString gr_lambda0_y_name = "gr_lambda0_y_";
+    TString gr_lambda0_yp_name = "gr_lambda0_yp_";
+    gr_lambda0_x_name += nRuns;
+    gr_lambda0_xp_name += nRuns;
+    gr_lambda0_y_name += nRuns;
+    gr_lambda0_yp_name += nRuns;
+    gr_lambda0_x->SetName(gr_lambda0_x_name.Data());
+    gr_lambda0_xp->SetName(gr_lambda0_xp_name.Data());
+    gr_lambda0_y->SetName(gr_lambda0_y_name.Data());
+    gr_lambda0_yp->SetName(gr_lambda0_yp_name.Data());
+
+    TGraph* gr_pion_p_x = new TGraph();
+    TGraph* gr_pion_p_xp = new TGraph();
+    TGraph* gr_pion_p_y = new TGraph();
+    TGraph* gr_pion_p_yp = new TGraph();
+    TString gr_pion_p_x_name = "gr_pion_p_x_";
+    TString gr_pion_p_xp_name = "gr_pion_p_xp_";
+    TString gr_pion_p_y_name = "gr_pion_p_y_";
+    TString gr_pion_p_yp_name = "gr_pion_p_yp_";
+    gr_pion_p_x_name += nRuns;
+    gr_pion_p_xp_name += nRuns;
+    gr_pion_p_y_name += nRuns;
+    gr_pion_p_yp_name += nRuns;
+    gr_pion_p_x->SetName(gr_pion_p_x_name.Data());
+    gr_pion_p_xp->SetName(gr_pion_p_xp_name.Data());
+    gr_pion_p_y->SetName(gr_pion_p_y_name.Data());
+    gr_pion_p_yp->SetName(gr_pion_p_yp_name.Data());
+
+    TGraph* gr_proton_x = new TGraph();
+    TGraph* gr_proton_xp = new TGraph();
+    TGraph* gr_proton_y = new TGraph();
+    TGraph* gr_proton_yp = new TGraph();
+    TString gr_proton_x_name = "gr_proton_x_";
+    TString gr_proton_xp_name = "gr_proton_xp_";
+    TString gr_proton_y_name = "gr_proton_y_";
+    TString gr_proton_yp_name = "gr_proton_yp_";
+    gr_proton_x_name += nRuns;
+    gr_proton_xp_name += nRuns;
+    gr_proton_y_name += nRuns;
+    gr_proton_yp_name += nRuns;
+    gr_proton_x->SetName(gr_proton_x_name.Data());
+    gr_proton_xp->SetName(gr_proton_xp_name.Data());
+    gr_proton_y->SetName(gr_proton_y_name.Data());
+    gr_proton_yp->SetName(gr_proton_yp_name.Data());
+
+    TGraph* gr_pion_m_x = new TGraph();
+    TGraph* gr_pion_m_xp = new TGraph();
+    TGraph* gr_pion_m_y = new TGraph();
+    TGraph* gr_pion_m_yp = new TGraph();
+    TString gr_pion_m_x_name = "gr_pion_m_x_";
+    TString gr_pion_m_xp_name = "gr_pion_m_xp_";
+    TString gr_pion_m_y_name = "gr_pion_m_y_";
+    TString gr_pion_m_yp_name = "gr_pion_m_yp_";
+    gr_pion_m_x_name += nRuns;
+    gr_pion_m_xp_name += nRuns;
+    gr_pion_m_y_name += nRuns;
+    gr_pion_m_yp_name += nRuns;
+    gr_pion_m_x->SetName(gr_pion_m_x_name.Data());
+    gr_pion_m_xp->SetName(gr_pion_m_xp_name.Data());
+    gr_pion_m_y->SetName(gr_pion_m_y_name.Data());
+    gr_pion_m_yp->SetName(gr_pion_m_yp_name.Data());
+
+    for(Int_t runID = 0; runID < nRuns; runID++)
+    {
+        for(Int_t iEntry = 0; iEntry < nEntries; iEntry++)
+        {
+            fChain1->GetEntry(iEntry);
+
+            if(iEntry%100 == 0)
+            {
+                printf("\r--> Run: %d/%d  |  Working: %3.1f",runID+1,nRuns,100.0*iEntry/nEntries);
+                fflush(stdout);
+            }
+
+            if(_CHBKG != CHBKGst) continue;
+
+            //--------------------//
+            // LambdaC
+            //--------------------//
+
+            pLc->SetXYZ(_Px, _Py, _Pz);
+
+            thetaXLambdaCout = Constants::_beamAngleInitialAtCryPosition + TMath::ATan(_Px/_Pz);
+
+            if(_CHBKG == 1)
+            {
+                thetaXLambdaCout += Constants::_crystalAngle;
+//                thetaXLambdaCout += Constants::_crystalOrientation;
+            }
+
+            thetaYLambdaCout    = TMath::ATan(_Py/_Pz);
+            thetaLambdaCout     = pLc->Theta();
+            phiLambdaCout       = pLc->Phi();
+
+            //--------------------//
+            // LambdaC Decay
+            //--------------------//
+
+            pProd_1[0].SetPxPyPzE(0,0,pLc->Mag(),_E);
+
+            if(decay->twoBody(pProd_1,mProd_1))
+            {
+                //--------------------//
+                // Lambda0
+                //--------------------//
+
+                p_lambda0 = pProd_1[1].P();
+
+                theta_x_lambda0 =
+                        thetaXLambdaCout +
+                        TMath::ATan(pProd_1[1].Px()/pProd_1[1].Pz());
+                theta_y_lambda0 =
+                        thetaYLambdaCout +
+                        TMath::ATan(pProd_1[1].Py()/pProd_1[1].Pz());
+                charge_lambda0 = 0.0;
+
+                /*x*/     coord_x0_lambda0[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+                /*x'*/    coord_x0_lambda0[1] = theta_x_lambda0;// [rad]
+                /*y*/     coord_x0_lambda0[2] = 0.0;              // [m]
+                /*y'*/    coord_x0_lambda0[3] = theta_y_lambda0;  // [rad]
+                /*l*/     coord_x0_lambda0[4] = 0.0;
+                /*dp*/    coord_x0_lambda0[5] = 0.0;
+
+                // RANDOM //
+                gamma_L0   = getGamma(mProd_2[0],p_lambda0);
+                beta_L0    = getBeta(gamma_L0);
+                prob       = rnd->Uniform(0.0,1.0);
+                cosTheta   = pProd_1[1].CosTheta();
+
+                if(prob == 0)
+                {
+                    while( 1 )
+                    {
+                        prob = rnd->Uniform(0.0,1.0);
+                        if(prob > 0) break;
+                    }
+                }
+                s_decay_2 = Constants::_ctau_Lambda0*beta_L0*gamma_L0*TMath::Log(1.0/prob); // [m]
+                s_decay_2 = s_decay_2*cosTheta;
+
+                h_11->Fill(s_decay_2);
+
+                if(s_decay_1 + s_decay_2 >= Constants::_tr1_s_pos - Constants::_cry3_51799_ua9_pos) continue;
+
+                h_12->Fill(s_decay_2);
+
+                //--------------------//
+                // Pion+
+                //--------------------//
+
+                p_pion_p = pProd_1[2].P();
+
+                theta_x_pion_p =
+                        thetaXLambdaCout +
+                        TMath::ATan(pProd_1[2].Px()/pProd_1[2].Pz());
+                theta_y_pion_p =
+                        thetaYLambdaCout +
+                        TMath::ATan(pProd_1[2].Py()/pProd_1[2].Pz());
+                charge_pion_p = 1.0;
+
+                /*x*/     coord_x0_pion_p[0] = Constants::_beamPositionInitialAtCryPosition;    // [m]
+                /*x'*/    coord_x0_pion_p[1] = theta_x_pion_p;// [rad]
+                /*y*/     coord_x0_pion_p[2] = 0.0;           // [m]
+                /*y'*/    coord_x0_pion_p[3] = theta_y_pion_p;  // [rad]
+                /*l*/     coord_x0_pion_p[4] = 0.0;
+                /*dp*/    coord_x0_pion_p[5] = 0.0;
+
+                //--------------------//
+                // Magnets Lambda0
+                //--------------------//
+
+                if(charge_lambda0 != 0)
+                {
+                    assert(0);
+                }
+
+                // INITIAL
+                gr_lambda0_x->SetPoint(0,Constants::_cry3_51799_ua9_pos+s_decay_1,coord_x0_lambda0[0]);
+                gr_lambda0_xp->SetPoint(0,Constants::_cry3_51799_ua9_pos+s_decay_1,coord_x0_lambda0[1]);
+                gr_lambda0_y->SetPoint(0,Constants::_cry3_51799_ua9_pos+s_decay_1,coord_x0_lambda0[2]);
+                gr_lambda0_yp->SetPoint(0,Constants::_cry3_51799_ua9_pos+s_decay_1,coord_x0_lambda0[3]);
+
+                // DRIFT & FINAL
+                magnet->GetNewCoordDrift(s_decay_2,Constants::_order_transport_matrix,coord_x0_lambda0,coord_x_lambda0,Constants::_aph,Constants::_apv);
+                gr_lambda0_x->SetPoint(1,Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2,coord_x_lambda0[0]);
+                gr_lambda0_xp->SetPoint(1,Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2,coord_x_lambda0[1]);
+                gr_lambda0_y->SetPoint(1,Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2,coord_x_lambda0[2]);
+                gr_lambda0_yp->SetPoint(1,Constants::_cry3_51799_ua9_pos+s_decay_1+s_decay_2,coord_x_lambda0[3]);
+
+                //--------------------//
+                // Magnets pion+
+                //--------------------//
+
+                passMagnets(s_decay_1,coord_x0_pion_p,coord_x_pion_p,p_pion_p,charge_pion_p,gr_pion_p_x,gr_pion_p_y,gr_pion_p_xp,gr_pion_p_yp,false);
+
+                //--------------------//
+                // Lambda0 Decay
+                //--------------------//
+
+                pProd_2[0].SetPxPyPzE(0.0,0.0,pProd_1[1].P(),pProd_1[1].E());
+
+                if(decay->twoBody(pProd_2,mProd_2))
+                {
+                    //--------------------//
+                    // Proton
+                    //--------------------//
+
+                    p_proton = pProd_2[1].P();
+
+                    theta_x_proton =
+                            coord_x_lambda0[1] +
+                            TMath::ATan(pProd_2[1].Px()/pProd_2[1].Pz());
+                    theta_y_proton =
+                            coord_x_lambda0[3] +
+                            TMath::ATan(pProd_2[1].Py()/pProd_2[1].Pz());
+                    charge_proton = 1.0;
+
+                    /*x*/     coord_x0_proton[0] = coord_x_lambda0[0];  // [m]
+                    /*x'*/    coord_x0_proton[1] = theta_x_proton;      // [rad]
+                    /*y*/     coord_x0_proton[2] = coord_x_lambda0[2];  // [m]
+                    /*y'*/    coord_x0_proton[3] = theta_y_proton;      // [rad]
+                    /*l*/     coord_x0_proton[4] = 0.0;
+                    /*dp*/    coord_x0_proton[5] = 0.0;
+
+                    //--------------------//
+                    // Pion-
+                    //--------------------//
+
+                    p_pion_m = pProd_2[2].P();
+
+                    theta_x_pion_m =
+                            coord_x_lambda0[1] +
+                            TMath::ATan(pProd_2[2].Px()/pProd_2[2].Pz());
+                    theta_y_pion_m =
+                            coord_x_lambda0[3] +
+                            TMath::ATan(pProd_2[2].Py()/pProd_2[2].Pz());
+                    charge_pion_m = -1.0;
+
+                    /*x*/     coord_x0_pion_m[0] = coord_x_lambda0[0];  // [m]
+                    /*x'*/    coord_x0_pion_m[1] = theta_x_pion_m;      // [rad]
+                    /*y*/     coord_x0_pion_m[2] = coord_x_lambda0[2];  // [m]
+                    /*y'*/    coord_x0_pion_m[3] = theta_y_pion_m;      // [rad]
+                    /*l*/     coord_x0_pion_m[4] = 0.0;
+                    /*dp*/    coord_x0_pion_m[5] = 0.0;
+
+                    //--------------------//
+                    // Magnets Proton
+                    //--------------------//
+
+                    passMagnets(s_decay_1+s_decay_2,coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,gr_proton_xp,gr_proton_yp,false);
+
+                    //--------------------//
+                    // Magnets Pion-
+                    //--------------------//
+
+                    passMagnets(s_decay_1+s_decay_2,coord_x0_pion_m,coord_x_pion_m,p_pion_m,charge_pion_m,gr_pion_m_x,gr_pion_m_y,gr_pion_m_xp,gr_pion_m_yp,false);
+
+                    //--------------------//
+                    // QF-L/2
+                    //--------------------//
+                    xTmp = TMath::Abs(gr_pion_p_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_pion_p_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_proton_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_proton_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_pion_m_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_pion_m_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    //--------------------//
+                    // QF
+                    //--------------------//
+
+                    xTmp = TMath::Abs(gr_pion_p_x->Eval(Constants::_q1_51810_pos));
+                    yTmp = TMath::Abs(gr_pion_p_y->Eval(Constants::_q1_51810_pos));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_proton_x->Eval(Constants::_q1_51810_pos));
+                    yTmp = TMath::Abs(gr_proton_y->Eval(Constants::_q1_51810_pos));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_pion_m_x->Eval(Constants::_q1_51810_pos));
+                    yTmp = TMath::Abs(gr_pion_m_y->Eval(Constants::_q1_51810_pos));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    //--------------------//
+                    // QF+L/2
+                    //--------------------//
+
+                    xTmp = TMath::Abs(gr_pion_p_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_pion_p_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_proton_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_proton_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    xTmp = TMath::Abs(gr_pion_m_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    yTmp = TMath::Abs(gr_pion_m_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+
+                    if( TMath::Power(xTmp/Constants::_qf_APERTYPE_ELLIPSE_HOR,2)+TMath::Power(yTmp/Constants::_qf_APERTYPE_ELLIPSE_VER,2) > 1.0 )
+                    {
+                        continue;
+                    }
+
+                    if(plot_graph)
+                    {
+                        gr_lambda0_x->Write();
+                        gr_lambda0_xp->Write();
+                        gr_lambda0_y->Write();
+                        gr_lambda0_yp->Write();
+                        gr_pion_p_x->Write();
+                        gr_pion_p_xp->Write();
+                        gr_pion_p_y->Write();
+                        gr_pion_p_yp->Write();
+                        gr_proton_x->Write();
+                        gr_proton_xp->Write();
+                        gr_proton_y->Write();
+                        gr_proton_yp->Write();
+                        gr_pion_m_x->Write();
+                        gr_pion_m_xp->Write();
+                        gr_pion_m_y->Write();
+                        gr_pion_m_yp->Write();
+
+                        cout<<endl<<"--> Trajectories are written"<<endl;
+                    }
+
+                    h_1->Fill(pLc->Mag());
+                    h_2->Fill(thetaLambdaCout);
+                    h_3->Fill(phiLambdaCout);
+                    h_4->Fill(thetaXLambdaCout);
+                    h_5->Fill(thetaYLambdaCout);
+                    h_6->Fill(p_lambda0);
+                    h_7->Fill(thetaLambdaCout+pProd_1[1].Theta());
+                    h_8->Fill(pProd_1[1].Phi());
+                    h_9->Fill(theta_x_lambda0);
+                    h_10->Fill(theta_y_lambda0);                    
+                    h_13->Fill(p_pion_p);
+                    h_14->Fill(thetaLambdaCout+pProd_1[2].Theta());
+                    h_15->Fill(pProd_1[2].Phi());
+                    h_16->Fill(theta_x_pion_p);
+                    h_17->Fill(theta_y_pion_p);
+                    h_18->Fill(p_proton);
+                    h_19->Fill(thetaLambdaCout+pProd_1[1].Theta()+pProd_2[1].Theta());
+                    h_20->Fill(pProd_2[1].Phi());
+                    h_21->Fill(theta_x_proton);
+                    h_22->Fill(theta_y_proton);
+                    h_23->Fill(p_pion_m);
+                    h_24->Fill(thetaLambdaCout+pProd_1[1].Theta()+pProd_2[2].Theta());
+                    h_25->Fill(pProd_2[2].Phi());
+                    h_26->Fill(theta_x_pion_m);
+                    h_27->Fill(theta_y_pion_m);
+
+                    //--------------------//
+                    // Tracker1
+                    //--------------------//
+
+                    h_28->Fill(gr_lambda0_x->Eval(Constants::_tr1_s_pos),gr_lambda0_y->Eval(Constants::_tr1_s_pos));
+                    h_29->Fill(gr_lambda0_xp->Eval(Constants::_tr1_s_pos),gr_lambda0_yp->Eval(Constants::_tr1_s_pos));
+                    h_30->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos),gr_pion_p_y->Eval(Constants::_tr1_s_pos));
+                    h_31->Fill(gr_pion_p_xp->Eval(Constants::_tr1_s_pos),gr_pion_p_yp->Eval(Constants::_tr1_s_pos));
+                    h_32->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos),gr_proton_y->Eval(Constants::_tr1_s_pos));
+                    h_33->Fill(gr_proton_xp->Eval(Constants::_tr1_s_pos),gr_proton_yp->Eval(Constants::_tr1_s_pos));
+                    h_34->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos),gr_pion_m_y->Eval(Constants::_tr1_s_pos));
+                    h_35->Fill(gr_pion_m_xp->Eval(Constants::_tr1_s_pos),gr_pion_m_yp->Eval(Constants::_tr1_s_pos));
+
+                    posXpionM   = gr_pion_p_x->Eval(Constants::_tr1_s_pos);
+                    posYpionM   = gr_pion_p_y->Eval(Constants::_tr1_s_pos);
+                    posXproton  = gr_proton_x->Eval(Constants::_tr1_s_pos);
+                    posYproton  = gr_proton_y->Eval(Constants::_tr1_s_pos);
+                    posXpionP   = gr_pion_m_x->Eval(Constants::_tr1_s_pos);
+                    posYpionP   = gr_pion_m_y->Eval(Constants::_tr1_s_pos);
+                    treeTr1->Fill();
+
+                    //--------------------//
+                    // Tracker2
+                    //--------------------//
+
+                    h_36->Fill(gr_lambda0_x->Eval(Constants::_tr2_s_pos),gr_lambda0_y->Eval(Constants::_tr2_s_pos));
+                    h_37->Fill(gr_lambda0_xp->Eval(Constants::_tr2_s_pos),gr_lambda0_yp->Eval(Constants::_tr2_s_pos));
+                    h_38->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos),gr_pion_p_y->Eval(Constants::_tr2_s_pos));
+                    h_39->Fill(gr_pion_p_xp->Eval(Constants::_tr2_s_pos),gr_pion_p_yp->Eval(Constants::_tr2_s_pos));
+                    h_40->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos),gr_proton_y->Eval(Constants::_tr2_s_pos));
+                    h_41->Fill(gr_proton_xp->Eval(Constants::_tr2_s_pos),gr_proton_yp->Eval(Constants::_tr2_s_pos));
+                    h_42->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos),gr_pion_m_y->Eval(Constants::_tr2_s_pos));
+                    h_43->Fill(gr_pion_m_xp->Eval(Constants::_tr2_s_pos),gr_pion_m_yp->Eval(Constants::_tr2_s_pos));
+
+                    posXpionM   = gr_pion_p_x->Eval(Constants::_tr2_s_pos);
+                    posYpionM   = gr_pion_p_y->Eval(Constants::_tr2_s_pos);
+                    posXproton  = gr_proton_x->Eval(Constants::_tr2_s_pos);
+                    posYproton  = gr_proton_y->Eval(Constants::_tr2_s_pos);
+                    posXpionP   = gr_pion_m_x->Eval(Constants::_tr2_s_pos);
+                    posYpionP   = gr_pion_m_y->Eval(Constants::_tr2_s_pos);
+                    treeTr2->Fill();
+
+                    //--------------------//
+                    // QF-L/2
+                    //--------------------//
+
+                    hh_28->Fill(gr_lambda0_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2),gr_lambda0_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    hh_30->Fill(gr_pion_p_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2),gr_pion_p_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    hh_32->Fill(gr_proton_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2),gr_proton_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+                    hh_34->Fill(gr_pion_m_x->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2),gr_pion_m_y->Eval(Constants::_q1_51810_pos-Constants::_quadrupole_length/2));
+
+                    //--------------------//
+                    // QF
+                    //--------------------//
+
+                    hhh_28->Fill(gr_lambda0_x->Eval(Constants::_q1_51810_pos),gr_lambda0_y->Eval(Constants::_q1_51810_pos));
+                    hhh_30->Fill(gr_pion_p_x->Eval(Constants::_q1_51810_pos),gr_pion_p_y->Eval(Constants::_q1_51810_pos));
+                    hhh_32->Fill(gr_proton_x->Eval(Constants::_q1_51810_pos),gr_proton_y->Eval(Constants::_q1_51810_pos));
+                    hhh_34->Fill(gr_pion_m_x->Eval(Constants::_q1_51810_pos),gr_pion_m_y->Eval(Constants::_q1_51810_pos));
+
+                    //--------------------//
+                    // QF+L/2
+                    //--------------------//
+
+                    hhhh_28->Fill(gr_lambda0_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2),gr_lambda0_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    hhhh_30->Fill(gr_pion_p_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2),gr_pion_p_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    hhhh_32->Fill(gr_proton_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2),gr_proton_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                    hhhh_34->Fill(gr_pion_m_x->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2),gr_pion_m_y->Eval(Constants::_q1_51810_pos+Constants::_quadrupole_length/2));
+                }
+            }
+        }
+    }
+    cout<<endl;
+
+    h_1->Write();
+    h_2->Write();
+    h_3->Write();
+    h_4->Write();
+    h_5->Write();
+    h_6->Write();
+    h_7->Write();
+    h_8->Write();
+    h_9->Write();
+    h_10->Write();
+    h_11->Write();
+    h_12->Write();
+    h_13->Write();
+    h_14->Write();
+    h_15->Write();
+    h_16->Write();
+    h_17->Write();
+    h_18->Write();
+    h_19->Write();
+    h_20->Write();
+    h_21->Write();
+    h_22->Write();
+    h_23->Write();
+    h_24->Write();
+    h_25->Write();
+    h_26->Write();
+    h_27->Write();
+    h_28->Write();
+    h_29->Write();
+    h_30->Write();
+    h_31->Write();
+    h_32->Write();
+    h_33->Write();
+    h_34->Write();
+    h_35->Write();
+    h_36->Write();
+    h_37->Write();
+    h_38->Write();
+    h_39->Write();
+    h_40->Write();
+    h_41->Write();
+    h_42->Write();
+    h_43->Write();
+    hh_28->Write();
+    hh_30->Write();
+    hh_32->Write();
+    hh_34->Write();
+    hhh_28->Write();
+    hhh_30->Write();
+    hhh_32->Write();
+    hhh_34->Write();
+    hhhh_28->Write();
+    hhhh_30->Write();
+    hhhh_32->Write();
+    hhhh_34->Write();
+
+    treeTr1->Write();
+    treeTr2->Write();
+
+    _file->Close();
+
+    gr_lambda0_x->Delete();
+    gr_lambda0_xp->Delete();
+    gr_lambda0_y->Delete();
+    gr_lambda0_yp->Delete();
+    gr_pion_p_x->Delete();
+    gr_pion_p_xp->Delete();
+    gr_pion_p_y->Delete();
+    gr_pion_p_yp->Delete();
+    gr_proton_x->Delete();
+    gr_proton_xp->Delete();
+    gr_proton_y->Delete();
+    gr_proton_yp->Delete();
+    gr_pion_m_x->Delete();
+    gr_pion_m_xp->Delete();
+    gr_pion_m_y->Delete();
+    gr_pion_m_yp->Delete();
+
+    cout<<"--> Output file: "<<output_file_name<<endl;
+}
+
+void function_10(TString input_filedir_name, TString output_file_name, Int_t nRuns, Int_t CHBKGst)
+{
+    //-----------------------------------------//
+    Bool_t plot_graph   = kFALSE;//kTRUE;      // to plot graphs
+    //-----------------------------------------//
+    // Read file
+    //-----------------------------------------//
+    cout<<"--> nRuns = "<<nRuns<<" | CHBKG = "<<CHBKGst<<endl;
+
+    Double_t _Px;
+    Double_t _Py;
+    Double_t _Pz;
+    Double_t _E;
+    Double_t _mass;
+    Int_t _CHBKG;
+
+    TChain* fChain1 = new TChain("TreeCommon");
+    TString input_file_name = input_filedir_name;
+    input_file_name += "common_histo_output_function_4.root";
+    if(fChain1->Add(input_file_name.Data()))
+    {
+        cout<<"--> File: "<<input_file_name<<" has been added"<<endl;
+    }
+    else
+    {
+        assert(0);
+    }
+
+    fChain1->SetBranchAddress("Px",           &_Px);
+    fChain1->SetBranchAddress("Py",           &_Py);
+    fChain1->SetBranchAddress("Pz",           &_Pz);
+    fChain1->SetBranchAddress("E",            &_E);
+    fChain1->SetBranchAddress("mass",         &_mass);
+    fChain1->SetBranchAddress("CHBKG",        &_CHBKG);
+
+    Long64_t nEntries = fChain1->GetEntries();
+    cout<<"--> nEntries: "<<nEntries<<endl;
+
+    //-----------------------------------------//
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int seed = tp.tv_sec*1000 + tp.tv_usec/1000;
+    TRandom3* rnd = new TRandom3(seed);
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+
+    //-----------------------------------------//
+    // Decay section
+    //-----------------------------------------//
+    DecayClass* decay = new DecayClass();
+    //-----------------------------------------//
+
+    Double_t p_lambda0 = -999, charge_lambda0 = -999, theta_x_lambda0 = -999, theta_y_lambda0 = -999;
+    Double_t* coord_x0_lambda0          = new Double_t[mtrx_size];
+    Double_t* coord_x_lambda0           = new Double_t[mtrx_size];
+
+    Double_t p_pion_p = -999, charge_pion_p = -999, theta_x_pion_p = -999, theta_y_pion_p = -999;
+    Double_t* coord_x0_pion_p          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_p           = new Double_t[mtrx_size];
+
+    Double_t p_proton = -999, charge_proton = -999, theta_x_proton = -999, theta_y_proton = -999;
+    Double_t* coord_x0_proton          = new Double_t[mtrx_size];
+    Double_t* coord_x_proton           = new Double_t[mtrx_size];
+
+    Double_t p_pion_m = -999, charge_pion_m = -999, theta_x_pion_m = -999, theta_y_pion_m = -999;
+    Double_t* coord_x0_pion_m          = new Double_t[mtrx_size];
+    Double_t* coord_x_pion_m           = new Double_t[mtrx_size];
+
+    TLorentzVector pProd_1[3];
+    TLorentzVector pProd_2[3];
+    Double_t mProd_1[3];
+    Double_t mProd_2[3];
+
+    Double_t s_decay_1 = 0; // LambdaC+ decay position
+    Double_t s_decay_2 = 0; // Lambda0 decay position
+
+    // Mass
+    mProd_1[0] = 2.28646; // Lc+    [GeV/c2]
+    mProd_1[1] = 1.11568; // L0     [GeV/c2]
+    mProd_1[2] = 0.13957; // Pion+  [GeV/c2]
+
+    mProd_2[0] = 1.11568; // L0     [GeV/c2]
+    mProd_2[1] = 0.93827; // Proton [GeV/c2]
+    mProd_2[2] = 0.13957; // Pion-  [GeV/c2]
+
+    TFile* _file = new TFile(output_file_name.Data(),"RECREATE");
+
+    TH1D* h_1 = new TH1D("h_1","L_{c} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_2 = new TH1D("h_2","L_{c} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_3 = new TH1D("h_3","L_{c} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_4 = new TH1D("h_4","L_{c} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_5 = new TH1D("h_5","L_{c} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_6 = new TH1D("h_6","L_{0} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_7 = new TH1D("h_7","L_{0} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_8 = new TH1D("h_8","L_{0} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_9 = new TH1D("h_9","L_{0} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_10 = new TH1D("h_10","L_{0} #theta_{y} in [rad]",40000,-4.0,4.0);
+    TH1D* h_11 = new TH1D("h_11","L_{0} decay length (z-proj) in [m] all",110000,-10,100);
+    TH1D* h_12 = new TH1D("h_12","L_{0} decay length (z-proj) in [m] decay before QF",110000,-10,100);
+
+    TH1D* h_13 = new TH1D("h_13","#pi^{+} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_14 = new TH1D("h_14","#pi^{+} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_15 = new TH1D("h_15","#pi^{+} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_16 = new TH1D("h_16","#pi^{+} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_17 = new TH1D("h_17","#pi^{+} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_18 = new TH1D("h_18","proton momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_19 = new TH1D("h_19","proton #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_20 = new TH1D("h_20","proton #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_21 = new TH1D("h_21","proton #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_22 = new TH1D("h_22","proton #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH1D* h_23 = new TH1D("h_23","#pi^{-} momentum in [GeV/c]",330,-30.0,300.0);
+    TH1D* h_24 = new TH1D("h_24","#pi^{-} #theta in [rad]",40000,-4.0,4.0);
+    TH1D* h_25 = new TH1D("h_25","#pi^{-} #phi in [rad]",40000,-4.0,4.0);
+    TH1D* h_26 = new TH1D("h_26","#pi^{-} #theta_{x} in [rad]",40000,-4.0,4.0);
+    TH1D* h_27 = new TH1D("h_27","#pi^{-} #theta_{y} in [rad]",40000,-4.0,4.0);
+
+    TH2D* h_28 = new TH2D("h_28","XY L_{0} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_29 = new TH2D("h_29","XpYp L_{0} at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_30 = new TH2D("h_30","XY #pi^{+} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_31 = new TH2D("h_31","XpYp #pi^{+} at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_32 = new TH2D("h_32","XY proton at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_33 = new TH2D("h_33","XpYp proton at TR1 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_34 = new TH2D("h_34","XY #pi^{-} at TR1 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_35 = new TH2D("h_35","XpYp #pi^{-} at TR1 in [rad]",400,-4,4,400,-4,4);
+
+    TH2D* h_36 = new TH2D("h_36","XY L_{0} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_37 = new TH2D("h_37","XpYp L_{0} at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_38 = new TH2D("h_38","XY #pi^{+} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_39 = new TH2D("h_39","XpYp #pi^{+} at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_40 = new TH2D("h_40","XY proton at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_41 = new TH2D("h_41","XpYp proton at TR2 in [rad]",400,-4,4,400,-4,4);
+    TH2D* h_42 = new TH2D("h_42","XY #pi^{-} at TR2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* h_43 = new TH2D("h_43","XpYp #pi^{-} at TR2 in [rad]",400,-4,4,400,-4,4);
+
+    TH2D* hh_28 = new TH2D("hh_28","XY L_{0} at SEPTUM-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_30 = new TH2D("hh_30","XY #pi^{+} at SEPTUM-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_32 = new TH2D("hh_32","XY proton at SEPTUM-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hh_34 = new TH2D("hh_34","XY #pi^{-} at SEPTUM-L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    TH2D* hhh_28 = new TH2D("hhh_28","XY L_{0} at SEPTUM in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_30 = new TH2D("hhh_30","XY #pi^{+} at SEPTUM in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_32 = new TH2D("hhh_32","XY proton at SEPTUM in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhh_34 = new TH2D("hhh_34","XY #pi^{-} at SEPTUM in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    TH2D* hhhh_28 = new TH2D("hhhh_28","XY L_{0} at SEPTUM+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_30 = new TH2D("hhhh_30","XY #pi^{+} at SEPTUM+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_32 = new TH2D("hhhh_32","XY proton at SEPTUM+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+    TH2D* hhhh_34 = new TH2D("hhhh_34","XY #pi^{-} at SEPTUM+L/2 in [mm]",400,-0.4,0.4,400,-0.4,0.4);
+
+    Double_t posXpionM, posXproton, posXpionP;
+    Double_t posYpionM, posYproton, posYpionP;
+
+    TTree* treeTr1 = new TTree("TreeTR1", "Tree with Lc+ products at TR1");
+    treeTr1->Branch("posXpionM",    &posXpionM,     "posXpionM/D");
+    treeTr1->Branch("posYpionM",    &posYpionM,     "posYpionM/D");
+    treeTr1->Branch("posXproton",   &posXproton,    "posXproton/D");
+    treeTr1->Branch("posYproton",   &posYproton,    "posYproton/D");
+    treeTr1->Branch("posXpionP",    &posXpionP,     "posXpionP/D");
+    treeTr1->Branch("posYpionP",    &posYpionP,     "posYpionP/D");
+
+    TTree* treeTr2 = new TTree("TreeTR2", "Tree with Lc+ products at TR2");
+    treeTr2->Branch("posXpionM",    &posXpionM,     "posXpionM/D");
+    treeTr2->Branch("posYpionM",    &posYpionM,     "posYpionM/D");
+    treeTr2->Branch("posXproton",   &posXproton,    "posXproton/D");
+    treeTr2->Branch("posYproton",   &posYproton,    "posYproton/D");
+    treeTr2->Branch("posXpionP",    &posXpionP,     "posXpionP/D");
+    treeTr2->Branch("posYpionP",    &posYpionP,     "posYpionP/D");
+
+    cout<<endl;
+    Double_t thetaXLambdaCout, thetaYLambdaCout, thetaLambdaCout, phiLambdaCout;
+
+    TVector3* pLc = new TVector3();
+
+    Double_t gamma_L0, beta_L0, prob, cosTheta;
+    Double_t xTmp, yTmp;
+
+    TGraph* gr_lambda0_x = new TGraph();
+    TGraph* gr_lambda0_xp = new TGraph();
+    TGraph* gr_lambda0_y = new TGraph();
+    TGraph* gr_lambda0_yp = new TGraph();
+    TString gr_lambda0_x_name = "gr_lambda0_x_";
+    TString gr_lambda0_xp_name = "gr_lambda0_xp_";
+    TString gr_lambda0_y_name = "gr_lambda0_y_";
+    TString gr_lambda0_yp_name = "gr_lambda0_yp_";
+    gr_lambda0_x_name += nRuns;
+    gr_lambda0_xp_name += nRuns;
+    gr_lambda0_y_name += nRuns;
+    gr_lambda0_yp_name += nRuns;
+    gr_lambda0_x->SetName(gr_lambda0_x_name.Data());
+    gr_lambda0_xp->SetName(gr_lambda0_xp_name.Data());
+    gr_lambda0_y->SetName(gr_lambda0_y_name.Data());
+    gr_lambda0_yp->SetName(gr_lambda0_yp_name.Data());
+
+    TGraph* gr_pion_p_x = new TGraph();
+    TGraph* gr_pion_p_xp = new TGraph();
+    TGraph* gr_pion_p_y = new TGraph();
+    TGraph* gr_pion_p_yp = new TGraph();
+    TString gr_pion_p_x_name = "gr_pion_p_x_";
+    TString gr_pion_p_xp_name = "gr_pion_p_xp_";
+    TString gr_pion_p_y_name = "gr_pion_p_y_";
+    TString gr_pion_p_yp_name = "gr_pion_p_yp_";
+    gr_pion_p_x_name += nRuns;
+    gr_pion_p_xp_name += nRuns;
+    gr_pion_p_y_name += nRuns;
+    gr_pion_p_yp_name += nRuns;
+    gr_pion_p_x->SetName(gr_pion_p_x_name.Data());
+    gr_pion_p_xp->SetName(gr_pion_p_xp_name.Data());
+    gr_pion_p_y->SetName(gr_pion_p_y_name.Data());
+    gr_pion_p_yp->SetName(gr_pion_p_yp_name.Data());
+
+    TGraph* gr_proton_x = new TGraph();
+    TGraph* gr_proton_xp = new TGraph();
+    TGraph* gr_proton_y = new TGraph();
+    TGraph* gr_proton_yp = new TGraph();
+    TString gr_proton_x_name = "gr_proton_x_";
+    TString gr_proton_xp_name = "gr_proton_xp_";
+    TString gr_proton_y_name = "gr_proton_y_";
+    TString gr_proton_yp_name = "gr_proton_yp_";
+    gr_proton_x_name += nRuns;
+    gr_proton_xp_name += nRuns;
+    gr_proton_y_name += nRuns;
+    gr_proton_yp_name += nRuns;
+    gr_proton_x->SetName(gr_proton_x_name.Data());
+    gr_proton_xp->SetName(gr_proton_xp_name.Data());
+    gr_proton_y->SetName(gr_proton_y_name.Data());
+    gr_proton_yp->SetName(gr_proton_yp_name.Data());
+
+    TGraph* gr_pion_m_x = new TGraph();
+    TGraph* gr_pion_m_xp = new TGraph();
+    TGraph* gr_pion_m_y = new TGraph();
+    TGraph* gr_pion_m_yp = new TGraph();
+    TString gr_pion_m_x_name = "gr_pion_m_x_";
+    TString gr_pion_m_xp_name = "gr_pion_m_xp_";
+    TString gr_pion_m_y_name = "gr_pion_m_y_";
+    TString gr_pion_m_yp_name = "gr_pion_m_yp_";
+    gr_pion_m_x_name += nRuns;
+    gr_pion_m_xp_name += nRuns;
+    gr_pion_m_y_name += nRuns;
+    gr_pion_m_yp_name += nRuns;
+    gr_pion_m_x->SetName(gr_pion_m_x_name.Data());
+    gr_pion_m_xp->SetName(gr_pion_m_xp_name.Data());
+    gr_pion_m_y->SetName(gr_pion_m_y_name.Data());
+    gr_pion_m_yp->SetName(gr_pion_m_yp_name.Data());
+
+    for(Int_t runID = 0; runID < nRuns; runID++)
+    {
+        for(Int_t iEntry = 0; iEntry < nEntries; iEntry++)
+        {
+            fChain1->GetEntry(iEntry);
+
+            if(iEntry%100 == 0)
+            {
+                printf("\r--> Run: %d/%d  |  Working: %3.1f",runID+1,nRuns,100.0*iEntry/nEntries);
+                fflush(stdout);
+            }
+
+            if(_CHBKG != CHBKGst) continue;
+
+            //--------------------//
+            // LambdaC
+            //--------------------//
+
+            pLc->SetXYZ(_Px, _Py, _Pz);
+
+            thetaXLambdaCout = Constants::_beamAngleInitialAtCryPosition_Septum + TMath::ATan(_Px/_Pz);
+
+            if(_CHBKG == 1)
+            {
+                thetaXLambdaCout += Constants::_crystalAngle_Septum;
+//                thetaXLambdaCout += Constants::_crystalOrientation;
+            }
+
+            thetaYLambdaCout    = TMath::ATan(_Py/_Pz);
+            thetaLambdaCout     = pLc->Theta();
+            phiLambdaCout       = pLc->Phi();
+
+            //--------------------//
+            // LambdaC Decay
+            //--------------------//
+
+            pProd_1[0].SetPxPyPzE(0,0,pLc->Mag(),_E);
+
+            if(decay->twoBody(pProd_1,mProd_1))
+            {
+                //--------------------//
+                // Lambda0
+                //--------------------//
+
+                p_lambda0 = pProd_1[1].P();
+
+                theta_x_lambda0 =
+                        thetaXLambdaCout +
+                        TMath::ATan(pProd_1[1].Px()/pProd_1[1].Pz());
+                theta_y_lambda0 =
+                        thetaYLambdaCout +
+                        TMath::ATan(pProd_1[1].Py()/pProd_1[1].Pz());
+                charge_lambda0 = 0.0;
+
+                /*x*/     coord_x0_lambda0[0] = Constants::_beamPositionInitialAtCryPosition_Septum;    // [m]
+                /*x'*/    coord_x0_lambda0[1] = theta_x_lambda0;// [rad]
+                /*y*/     coord_x0_lambda0[2] = 0.0;              // [m]
+                /*y'*/    coord_x0_lambda0[3] = theta_y_lambda0;  // [rad]
+                /*l*/     coord_x0_lambda0[4] = 0.0;
+                /*dp*/    coord_x0_lambda0[5] = 0.0;
+
+                // RANDOM //
+                gamma_L0   = getGamma(mProd_2[0],p_lambda0);
+                beta_L0    = getBeta(gamma_L0);
+                prob       = rnd->Uniform(0.0,1.0);
+                cosTheta   = pProd_1[1].CosTheta();
+
+                if(prob == 0)
+                {
+                    while( 1 )
+                    {
+                        prob = rnd->Uniform(0.0,1.0);
+                        if(prob > 0) break;
+                    }
+                }
+                s_decay_2 = Constants::_ctau_Lambda0*beta_L0*gamma_L0*TMath::Log(1.0/prob); // [m]
+                s_decay_2 = s_decay_2*cosTheta;
+
+                h_11->Fill(s_decay_2);
+
+                if(s_decay_1 + s_decay_2 >= Constants::_tr1_s_pos_Septum - Constants::_cry3_51799_ua9_pos_Septum) continue;
+
+                h_12->Fill(s_decay_2);
+
+                //--------------------//
+                // Pion+
+                //--------------------//
+
+                p_pion_p = pProd_1[2].P();
+
+                theta_x_pion_p =
+                        thetaXLambdaCout +
+                        TMath::ATan(pProd_1[2].Px()/pProd_1[2].Pz());
+                theta_y_pion_p =
+                        thetaYLambdaCout +
+                        TMath::ATan(pProd_1[2].Py()/pProd_1[2].Pz());
+                charge_pion_p = 1.0;
+
+                /*x*/     coord_x0_pion_p[0] = Constants::_beamPositionInitialAtCryPosition_Septum;    // [m]
+                /*x'*/    coord_x0_pion_p[1] = theta_x_pion_p;// [rad]
+                /*y*/     coord_x0_pion_p[2] = 0.0;           // [m]
+                /*y'*/    coord_x0_pion_p[3] = theta_y_pion_p;  // [rad]
+                /*l*/     coord_x0_pion_p[4] = 0.0;
+                /*dp*/    coord_x0_pion_p[5] = 0.0;
+
+                //--------------------//
+                // Magnets Lambda0
+                //--------------------//
+
+                if(charge_lambda0 != 0)
+                {
+                    assert(0);
+                }
+
+                // INITIAL
+                gr_lambda0_x->SetPoint(0,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1,coord_x0_lambda0[0]);
+                gr_lambda0_xp->SetPoint(0,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1,coord_x0_lambda0[1]);
+                gr_lambda0_y->SetPoint(0,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1,coord_x0_lambda0[2]);
+                gr_lambda0_yp->SetPoint(0,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1,coord_x0_lambda0[3]);
+
+                // DRIFT & FINAL
+                magnet->GetNewCoordDrift(s_decay_1+s_decay_2,Constants::_order_transport_matrix,coord_x0_lambda0,coord_x_lambda0,Constants::_aph,Constants::_apv);
+                gr_lambda0_x->SetPoint(1,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1+s_decay_2,coord_x_lambda0[0]);
+                gr_lambda0_xp->SetPoint(1,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1+s_decay_2,coord_x_lambda0[1]);
+                gr_lambda0_y->SetPoint(1,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1+s_decay_2,coord_x_lambda0[2]);
+                gr_lambda0_yp->SetPoint(1,Constants::_cry3_51799_ua9_pos_Septum+s_decay_1+s_decay_2,coord_x_lambda0[3]);
+
+                //--------------------//
+                // Magnets pion+
+                //--------------------//
+
+                passMagnetsSeptum(s_decay_1,coord_x0_pion_p,coord_x_pion_p,p_pion_p,charge_pion_p,gr_pion_p_x,gr_pion_p_y,gr_pion_p_xp,gr_pion_p_yp,false);
+
+                //--------------------//
+                // Lambda0 Decay
+                //--------------------//
+
+                pProd_2[0].SetPxPyPzE(0.0,0.0,pProd_1[1].P(),pProd_1[1].E());
+
+                if(decay->twoBody(pProd_2,mProd_2))
+                {
+                    //--------------------//
+                    // Proton
+                    //--------------------//
+
+                    p_proton = pProd_2[1].P();
+
+                    theta_x_proton =
+                            coord_x_lambda0[1] +
+                            TMath::ATan(pProd_2[1].Px()/pProd_2[1].Pz());
+                    theta_y_proton =
+                            coord_x_lambda0[3] +
+                            TMath::ATan(pProd_2[1].Py()/pProd_2[1].Pz());
+                    charge_proton = 1.0;
+
+                    /*x*/     coord_x0_proton[0] = coord_x_lambda0[0];  // [m]
+                    /*x'*/    coord_x0_proton[1] = theta_x_proton;      // [rad]
+                    /*y*/     coord_x0_proton[2] = coord_x_lambda0[2];  // [m]
+                    /*y'*/    coord_x0_proton[3] = theta_y_proton;      // [rad]
+                    /*l*/     coord_x0_proton[4] = 0.0;
+                    /*dp*/    coord_x0_proton[5] = 0.0;
+
+                    //--------------------//
+                    // Pion-
+                    //--------------------//
+
+                    p_pion_m = pProd_2[2].P();
+
+                    theta_x_pion_m =
+                            coord_x_lambda0[1] +
+                            TMath::ATan(pProd_2[2].Px()/pProd_2[2].Pz());
+                    theta_y_pion_m =
+                            coord_x_lambda0[3] +
+                            TMath::ATan(pProd_2[2].Py()/pProd_2[2].Pz());
+                    charge_pion_m = -1.0;
+
+                    /*x*/     coord_x0_pion_m[0] = coord_x_lambda0[0];  // [m]
+                    /*x'*/    coord_x0_pion_m[1] = theta_x_pion_m;      // [rad]
+                    /*y*/     coord_x0_pion_m[2] = coord_x_lambda0[2];  // [m]
+                    /*y'*/    coord_x0_pion_m[3] = theta_y_pion_m;      // [rad]
+                    /*l*/     coord_x0_pion_m[4] = 0.0;
+                    /*dp*/    coord_x0_pion_m[5] = 0.0;
+
+                    //--------------------//
+                    // Magnets Proton
+                    //--------------------//
+
+                    passMagnetsSeptum(s_decay_1+s_decay_2,coord_x0_proton,coord_x_proton,p_proton,charge_proton,gr_proton_x,gr_proton_y,gr_proton_xp,gr_proton_yp,false);
+
+                    //--------------------//
+                    // Magnets Pion-
+                    //--------------------//
+
+                    passMagnetsSeptum(s_decay_1+s_decay_2,coord_x0_pion_m,coord_x_pion_m,p_pion_m,charge_pion_m,gr_pion_m_x,gr_pion_m_y,gr_pion_m_xp,gr_pion_m_yp,false);
+
+                    //--------------------//
+                    // SEPTUM-L/2
+                    //--------------------//
+                    xTmp = gr_pion_p_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+                    yTmp = gr_pion_p_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_proton_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+                    yTmp = gr_proton_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_pion_m_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+                    yTmp = gr_pion_m_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    //--------------------//
+                    // SEPTUM
+                    //--------------------//
+
+                    xTmp = gr_pion_p_x->Eval(Constants::_septum_s_pos);
+                    yTmp = gr_pion_p_y->Eval(Constants::_septum_s_pos);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_proton_x->Eval(Constants::_septum_s_pos);
+                    yTmp = gr_proton_y->Eval(Constants::_septum_s_pos);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_pion_m_x->Eval(Constants::_septum_s_pos);
+                    yTmp = gr_pion_m_y->Eval(Constants::_septum_s_pos);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    //--------------------//
+                    // SEPTUM+L/2
+                    //--------------------//
+
+                    xTmp = gr_pion_p_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+                    yTmp = gr_pion_p_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_proton_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+                    yTmp = gr_proton_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    xTmp = gr_pion_m_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+                    yTmp = gr_pion_m_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2);
+
+                    if( xTmp < Constants::_SEPTUM_APERTYPE_RECT_HOR_POS - Constants::_SEPTUM_APERTYPE_RECT_HOR/2 || xTmp > Constants::_SEPTUM_APERTYPE_RECT_HOR_POS + Constants::_SEPTUM_APERTYPE_RECT_HOR/2)
+                    {
+                        continue;
+                    }
+                    if( yTmp < Constants::_SEPTUM_APERTYPE_RECT_VER_POS - Constants::_SEPTUM_APERTYPE_RECT_VER/2 || yTmp > Constants::_SEPTUM_APERTYPE_RECT_VER_POS + Constants::_SEPTUM_APERTYPE_RECT_VER/2)
+                    {
+                        continue;
+                    }
+
+                    if(plot_graph)
+                    {
+                        gr_lambda0_x->Write();
+                        gr_lambda0_xp->Write();
+                        gr_lambda0_y->Write();
+                        gr_lambda0_yp->Write();
+                        gr_pion_p_x->Write();
+                        gr_pion_p_xp->Write();
+                        gr_pion_p_y->Write();
+                        gr_pion_p_yp->Write();
+                        gr_proton_x->Write();
+                        gr_proton_xp->Write();
+                        gr_proton_y->Write();
+                        gr_proton_yp->Write();
+                        gr_pion_m_x->Write();
+                        gr_pion_m_xp->Write();
+                        gr_pion_m_y->Write();
+                        gr_pion_m_yp->Write();
+
+                        cout<<endl<<"--> Trajectories are written"<<endl;
+                    }
+
+                    h_1->Fill(pLc->Mag());
+                    h_2->Fill(thetaLambdaCout);
+                    h_3->Fill(phiLambdaCout);
+                    h_4->Fill(thetaXLambdaCout);
+                    h_5->Fill(thetaYLambdaCout);
+                    h_6->Fill(p_lambda0);
+                    h_7->Fill(thetaLambdaCout+pProd_1[1].Theta());
+                    h_8->Fill(pProd_1[1].Phi());
+                    h_9->Fill(theta_x_lambda0);
+                    h_10->Fill(theta_y_lambda0);
+                    h_13->Fill(p_pion_p);
+                    h_14->Fill(thetaLambdaCout+pProd_1[2].Theta());
+                    h_15->Fill(pProd_1[2].Phi());
+                    h_16->Fill(theta_x_pion_p);
+                    h_17->Fill(theta_y_pion_p);
+                    h_18->Fill(p_proton);
+                    h_19->Fill(thetaLambdaCout+pProd_1[1].Theta()+pProd_2[1].Theta());
+                    h_20->Fill(pProd_2[1].Phi());
+                    h_21->Fill(theta_x_proton);
+                    h_22->Fill(theta_y_proton);
+                    h_23->Fill(p_pion_m);
+                    h_24->Fill(thetaLambdaCout+pProd_1[1].Theta()+pProd_2[2].Theta());
+                    h_25->Fill(pProd_2[2].Phi());
+                    h_26->Fill(theta_x_pion_m);
+                    h_27->Fill(theta_y_pion_m);
+
+                    //--------------------//
+                    // Tracker1
+                    //--------------------//
+
+                    h_28->Fill(gr_lambda0_x->Eval(Constants::_tr1_s_pos_Septum),gr_lambda0_y->Eval(Constants::_tr1_s_pos_Septum));
+                    h_29->Fill(gr_lambda0_xp->Eval(Constants::_tr1_s_pos_Septum),gr_lambda0_yp->Eval(Constants::_tr1_s_pos_Septum));
+                    h_30->Fill(gr_pion_p_x->Eval(Constants::_tr1_s_pos_Septum),gr_pion_p_y->Eval(Constants::_tr1_s_pos_Septum));
+                    h_31->Fill(gr_pion_p_xp->Eval(Constants::_tr1_s_pos_Septum),gr_pion_p_yp->Eval(Constants::_tr1_s_pos_Septum));
+                    h_32->Fill(gr_proton_x->Eval(Constants::_tr1_s_pos_Septum),gr_proton_y->Eval(Constants::_tr1_s_pos_Septum));
+                    h_33->Fill(gr_proton_xp->Eval(Constants::_tr1_s_pos_Septum),gr_proton_yp->Eval(Constants::_tr1_s_pos_Septum));
+                    h_34->Fill(gr_pion_m_x->Eval(Constants::_tr1_s_pos_Septum),gr_pion_m_y->Eval(Constants::_tr1_s_pos_Septum));
+                    h_35->Fill(gr_pion_m_xp->Eval(Constants::_tr1_s_pos_Septum),gr_pion_m_yp->Eval(Constants::_tr1_s_pos_Septum));
+
+                    posXpionM   = gr_pion_p_x->Eval(Constants::_tr1_s_pos_Septum);
+                    posYpionM   = gr_pion_p_y->Eval(Constants::_tr1_s_pos_Septum);
+                    posXproton  = gr_proton_x->Eval(Constants::_tr1_s_pos_Septum);
+                    posYproton  = gr_proton_y->Eval(Constants::_tr1_s_pos_Septum);
+                    posXpionP   = gr_pion_m_x->Eval(Constants::_tr1_s_pos_Septum);
+                    posYpionP   = gr_pion_m_y->Eval(Constants::_tr1_s_pos_Septum);
+                    treeTr1->Fill();
+
+                    //--------------------//
+                    // Tracker2
+                    //--------------------//
+
+                    h_36->Fill(gr_lambda0_x->Eval(Constants::_tr2_s_pos_Septum),gr_lambda0_y->Eval(Constants::_tr2_s_pos_Septum));
+                    h_37->Fill(gr_lambda0_xp->Eval(Constants::_tr2_s_pos_Septum),gr_lambda0_yp->Eval(Constants::_tr2_s_pos_Septum));
+                    h_38->Fill(gr_pion_p_x->Eval(Constants::_tr2_s_pos_Septum),gr_pion_p_y->Eval(Constants::_tr2_s_pos_Septum));
+                    h_39->Fill(gr_pion_p_xp->Eval(Constants::_tr2_s_pos_Septum),gr_pion_p_yp->Eval(Constants::_tr2_s_pos_Septum));
+                    h_40->Fill(gr_proton_x->Eval(Constants::_tr2_s_pos_Septum),gr_proton_y->Eval(Constants::_tr2_s_pos_Septum));
+                    h_41->Fill(gr_proton_xp->Eval(Constants::_tr2_s_pos_Septum),gr_proton_yp->Eval(Constants::_tr2_s_pos_Septum));
+                    h_42->Fill(gr_pion_m_x->Eval(Constants::_tr2_s_pos_Septum),gr_pion_m_y->Eval(Constants::_tr2_s_pos_Septum));
+                    h_43->Fill(gr_pion_m_xp->Eval(Constants::_tr2_s_pos_Septum),gr_pion_m_yp->Eval(Constants::_tr2_s_pos_Septum));
+
+                    posXpionM   = gr_pion_p_x->Eval(Constants::_tr2_s_pos_Septum);
+                    posYpionM   = gr_pion_p_y->Eval(Constants::_tr2_s_pos_Septum);
+                    posXproton  = gr_proton_x->Eval(Constants::_tr2_s_pos_Septum);
+                    posYproton  = gr_proton_y->Eval(Constants::_tr2_s_pos_Septum);
+                    posXpionP   = gr_pion_m_x->Eval(Constants::_tr2_s_pos_Septum);
+                    posYpionP   = gr_pion_m_y->Eval(Constants::_tr2_s_pos_Septum);
+                    treeTr2->Fill();
+
+                    //--------------------//
+                    // SEPTUM-L/2
+                    //--------------------//
+
+                    hh_28->Fill(gr_lambda0_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2),gr_lambda0_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2));
+                    hh_30->Fill(gr_pion_p_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2),gr_pion_p_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2));
+                    hh_32->Fill(gr_proton_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2),gr_proton_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2));
+                    hh_34->Fill(gr_pion_m_x->Eval(Constants::_septum_s_pos-Constants::_septum_length/2),gr_pion_m_y->Eval(Constants::_septum_s_pos-Constants::_septum_length/2));
+
+                    //--------------------//
+                    // SEPTUM
+                    //--------------------//
+
+                    hhh_28->Fill(gr_lambda0_x->Eval(Constants::_septum_s_pos),gr_lambda0_y->Eval(Constants::_septum_s_pos));
+                    hhh_30->Fill(gr_pion_p_x->Eval(Constants::_septum_s_pos),gr_pion_p_y->Eval(Constants::_septum_s_pos));
+                    hhh_32->Fill(gr_proton_x->Eval(Constants::_septum_s_pos),gr_proton_y->Eval(Constants::_septum_s_pos));
+                    hhh_34->Fill(gr_pion_m_x->Eval(Constants::_septum_s_pos),gr_pion_m_y->Eval(Constants::_septum_s_pos));
+
+                    //--------------------//
+                    // SEPTUM+L/2
+                    //--------------------//
+
+                    hhhh_28->Fill(gr_lambda0_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2),gr_lambda0_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2));
+                    hhhh_30->Fill(gr_pion_p_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2),gr_pion_p_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2));
+                    hhhh_32->Fill(gr_proton_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2),gr_proton_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2));
+                    hhhh_34->Fill(gr_pion_m_x->Eval(Constants::_septum_s_pos+Constants::_septum_length/2),gr_pion_m_y->Eval(Constants::_septum_s_pos+Constants::_septum_length/2));
+                }
+            }
+        }
+    }
+    cout<<endl;
+
+    h_1->Write();
+    h_2->Write();
+    h_3->Write();
+    h_4->Write();
+    h_5->Write();
+    h_6->Write();
+    h_7->Write();
+    h_8->Write();
+    h_9->Write();
+    h_10->Write();
+    h_11->Write();
+    h_12->Write();
+    h_13->Write();
+    h_14->Write();
+    h_15->Write();
+    h_16->Write();
+    h_17->Write();
+    h_18->Write();
+    h_19->Write();
+    h_20->Write();
+    h_21->Write();
+    h_22->Write();
+    h_23->Write();
+    h_24->Write();
+    h_25->Write();
+    h_26->Write();
+    h_27->Write();
+    h_28->Write();
+    h_29->Write();
+    h_30->Write();
+    h_31->Write();
+    h_32->Write();
+    h_33->Write();
+    h_34->Write();
+    h_35->Write();
+    h_36->Write();
+    h_37->Write();
+    h_38->Write();
+    h_39->Write();
+    h_40->Write();
+    h_41->Write();
+    h_42->Write();
+    h_43->Write();
+    hh_28->Write();
+    hh_30->Write();
+    hh_32->Write();
+    hh_34->Write();
+    hhh_28->Write();
+    hhh_30->Write();
+    hhh_32->Write();
+    hhh_34->Write();
+    hhhh_28->Write();
+    hhhh_30->Write();
+    hhhh_32->Write();
+    hhhh_34->Write();
+
+    treeTr1->Write();
+    treeTr2->Write();
+
+    _file->Close();
+
+    gr_lambda0_x->Delete();
+    gr_lambda0_xp->Delete();
+    gr_lambda0_y->Delete();
+    gr_lambda0_yp->Delete();
+    gr_pion_p_x->Delete();
+    gr_pion_p_xp->Delete();
+    gr_pion_p_y->Delete();
+    gr_pion_p_yp->Delete();
+    gr_proton_x->Delete();
+    gr_proton_xp->Delete();
+    gr_proton_y->Delete();
+    gr_proton_yp->Delete();
+    gr_pion_m_x->Delete();
+    gr_pion_m_xp->Delete();
+    gr_pion_m_y->Delete();
+    gr_pion_m_yp->Delete();
+
+    cout<<"--> Output file: "<<output_file_name<<endl;
 }
 
 Bool_t isChanneled(Double_t particleAngleOut)
@@ -3160,6 +4658,575 @@ void passMagnets(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, 
         gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[2]);
         gr_yp->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[3]);
     }
+
+    delete [] coord_temp_1_x;
+    delete [] coord_temp_2_x;
+    delete magnet;
+}
+
+void passMagnetsSeptum(Double_t s, Double_t* coord_x0, Double_t* coord_x, Double_t p, Double_t Charge_C, TGraph *gr_x, TGraph *gr_y, TGraph *gr_xp, TGraph *gr_yp, Bool_t print)
+{
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    MagClass* magnet = new MagClass();
+    const Int_t mtrx_size = magnet->_mtrx_size;
+    Int_t order = Constants::_order_transport_matrix;
+
+    Double_t KQ2 = Constants::_grad_quad_2;      // [m-2]
+    Double_t KQ3 = Constants::_grad_quad_3;      // [m-2]
+    Double_t KQ4 = Constants::_grad_quad_4;      // [m-2]
+    Double_t KS1 = Constants::_grad_sext_1;      // [m-3]
+    Double_t ADL = Constants::_angle_dipole;     // [rad]
+    Double_t QL = Constants::_quadrupole_length; // [m]
+    Double_t DL = Constants::_dipole_length;     // [m]
+    Double_t SL = Constants::_sextupole_length;  // [m]
+    Double_t P0 = Constants::_nominal_momentum;  // [GeV/c]
+    Double_t APH = Constants::_aph;              // [m]
+    Double_t APV = Constants::_apv;              // [m]
+    Double_t SPL = Constants::_septum_length;    // [m]
+    Double_t SPA = Constants::_septum_angle;     // [rad]
+
+    Double_t DRIFTL0 = Constants::_xrph_52202_ua9_pos - Constants::_cry3_51799_ua9_pos_Septum;      // [m]
+    Double_t DRIFTL1 = Constants::_septum_s_pos-(SPL/2.0) - Constants::_cry3_51799_ua9_pos_Septum;  // [m]
+    Double_t DRIFTL2 = Constants::_q2_51910_pos-Constants::_septum_s_pos-(SPL/2.0);                 // [m]
+    Double_t DRIFTL3 = Constants::_xrph_51937_ua9_pos-Constants::_q2_51910_pos;           // [m]
+    Double_t DRIFTL4 = Constants::_lsf_52005_pos-Constants::_xrph_51937_ua9_pos;          // [m]
+    Double_t DRIFTL5 = Constants::_q3_52010_pos-Constants::_lsf_52005_pos;                // [m]
+    Double_t DRIFTL6 = Constants::_mba_52030_pos-(DL/2.0)-Constants::_q3_52010_pos;       // [m]
+    Double_t DRIFTL7 = Constants::_mba_52050_pos-DL-Constants::_mba_52030_pos;            // [m]
+    Double_t DRIFTL8 = Constants::_mbb_52070_pos-DL-Constants::_mba_52050_pos;            // [m]
+    Double_t DRIFTL9 = Constants::_mbb_52090_pos-DL-Constants::_mbb_52070_pos;            // [m]
+    Double_t DRIFTL10 = Constants::_q4_52110_pos-(DL/2.0)-Constants::_mbb_52090_pos;      // [m]
+    Double_t DRIFTL11 = Constants::_mbb_52130_pos-(DL/2.0)-Constants::_q4_52110_pos;      // [m]
+    Double_t DRIFTL12 = Constants::_mbb_52150_pos-DL-Constants::_mbb_52130_pos;           // [m]
+    Double_t DRIFTL13 = Constants::_xrph_52202_ua9_pos-(DL/2.0)-Constants::_mbb_52150_pos;// [m]
+
+    //-----------------------------------------//
+
+    Double_t* coord_temp_1_x    = new Double_t[mtrx_size];
+    Double_t* coord_temp_2_x    = new Double_t[mtrx_size];
+
+    //-----------------------------------------//
+    // Magnets section
+    //-----------------------------------------//
+
+    Int_t gr_x_ipoint = 0, gr_y_ipoint = 0;
+    Bool_t s_status = kFALSE;
+
+    if(!s_status && s <= 0)
+    {
+        // INITIAL
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum,coord_x0[0]);
+        gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum,coord_x0[1]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum,coord_x0[2]);
+        gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum,coord_x0[3]);
+        gr_x_ipoint++;
+        gr_y_ipoint++;
+
+        s_status = kTRUE;
+    }
+
+    if(Constants::_switch_magnets && Charge_C != 0)
+    {
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < DRIFTL1)
+        {
+            DRIFTL1 = DRIFTL1 - s;
+            // DRIFT1-S
+            if(!magnet->GetNewCoordDrift(DRIFTL1,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT1
+            if(!magnet->GetNewCoordDrift(DRIFTL1,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // SEPTUM: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,SPA,Charge_C,SPL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_septum_s_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_septum_s_pos+SPL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_septum_s_pos+SPL/2,coord_temp_2_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_septum_s_pos+SPL/2,coord_temp_2_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_septum_s_pos+SPL/2,coord_temp_2_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_septum_s_pos+SPL/2,coord_temp_2_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q2_51910_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL2 = Constants::_q2_51910_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT2-S
+            if(!magnet->GetNewCoordDrift(DRIFTL2,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT2
+            if(!magnet->GetNewCoordDrift(DRIFTL2,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // QUAD2: FOC in Y, DEFOC in X
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ2,p,P0,QL,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q2_51910_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q2_51910_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_q2_51910_pos,coord_temp_2_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_xrph_51937_ua9_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL3 = Constants::_xrph_51937_ua9_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT3-S
+            if(!magnet->GetNewCoordDrift(DRIFTL3,order,coord_x0,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT3
+            if(!magnet->GetNewCoordDrift(DRIFTL3,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_xrph_51937_ua9_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_xrph_51937_ua9_pos,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_lsf_52005_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL4 = Constants::_lsf_52005_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT4-S
+            if(!magnet->GetNewCoordDrift(DRIFTL4,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT4
+            if(!magnet->GetNewCoordDrift(DRIFTL4,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // SEXT1
+            if(!magnet->GetNewCoordSextupole(Charge_C*KS1,p,P0,SL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_lsf_52005_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_lsf_52005_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_lsf_52005_pos,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q3_52010_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL5 = Constants::_q3_52010_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT5-S
+            if(!magnet->GetNewCoordDrift(DRIFTL5,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT5
+            if(!magnet->GetNewCoordDrift(DRIFTL5,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // QUAD3: FOC in X, DEFOC in Y
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ3,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q3_52010_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q3_52010_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_q3_52010_pos,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q3_52010_pos + DRIFTL6 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL6 = Constants::_q3_52010_pos + DRIFTL6 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT6-S
+            if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT6
+            if(!magnet->GetNewCoordDrift(DRIFTL6,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+        if(s_status)
+        {
+            // DIPOLE1: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mba_52030_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52030_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mba_52030_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mba_52030_pos + DL/2 + DRIFTL7 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL7 = Constants::_mba_52030_pos + DL/2 + DRIFTL7 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT7
+            if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT7
+            if(!magnet->GetNewCoordDrift(DRIFTL7,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52030_pos+DL/2+DRIFTL7);
+        }
+        if(s_status)
+        {
+            // DIPOLE2: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mba_52050_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mba_52050_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mba_52050_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mba_52050_pos + DL/2 + DRIFTL8 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL8 = Constants::_mba_52050_pos + DL/2 + DRIFTL8 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT8
+            if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT8
+            if(!magnet->GetNewCoordDrift(DRIFTL8,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mba_52050_pos+DL/2+DRIFTL8);
+        }
+        if(s_status)
+        {
+            // DIPOLE3: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52070_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52070_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mbb_52070_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52070_pos + DL/2 + DRIFTL9 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL9 = Constants::_mbb_52070_pos + DL/2 + DRIFTL9 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT9-S
+            if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT9
+            if(!magnet->GetNewCoordDrift(DRIFTL9,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52070_pos+DL/2+DRIFTL9);
+        }
+        if(s_status)
+        {
+            // DIPOLE4: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52090_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52090_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mbb_52090_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52090_pos + DL/2 + DRIFTL10 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL10 = Constants::_mbb_52090_pos+DL/2+DRIFTL10 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT10-S
+            if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT10
+            if(!magnet->GetNewCoordDrift(DRIFTL10,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52090_pos+DL/2+DRIFTL10);
+        }
+        if(s_status)
+        {
+            // QUAD4: FOC in Y, DEFOC in X
+            if(!magnet->GetNewCoordQuadrupole(Charge_C*KQ4,p,P0,QL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_q4_52110_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_q4_52110_pos);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_q4_52110_pos,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_q4_52110_pos + DRIFTL11 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL11 = Constants::_q4_52110_pos + DRIFTL11 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT11-S
+            if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT11
+            if(!magnet->GetNewCoordDrift(DRIFTL11,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_q4_52110_pos+DRIFTL11);
+        }
+        if(s_status)
+        {
+            // DIPOLE5: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52130_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52130_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mbb_52130_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_mbb_52130_pos + DL/2 + DRIFTL12 - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL12 = Constants::_mbb_52130_pos + DL/2 + DRIFTL12 - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT12-S
+            if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_x0,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT12
+            if(!magnet->GetNewCoordDrift(DRIFTL12,order,coord_temp_1_x,coord_temp_2_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_2_x[0],coord_temp_2_x[1],Constants::_mbb_52130_pos+DL/2+DRIFTL12);
+        }
+        if(s_status)
+        {
+            // DIPOLE6: BEND & DEFOC in X, FOC in Y
+            if(!magnet->GetNewCoordDipole(P0,p,ADL,Charge_C,DL,order,coord_temp_2_x,coord_temp_1_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_mbb_52150_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_temp_1_x[0],coord_temp_1_x[1],Constants::_mbb_52150_pos+DL/2);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_mbb_52150_pos+DL/2,coord_temp_1_x[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+        if(!s_status && s < Constants::_xrph_52202_ua9_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL13 = Constants::_xrph_52202_ua9_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT13-S
+            if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT13
+            if(!magnet->GetNewCoordDrift(DRIFTL13,order,coord_temp_1_x,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<Constants::_xrph_52202_ua9_pos<<" [m] ##"<<endl; /*continue;*/}
+        }
+        //-----------------------------------------------------------------------------------------------------------------------------//
+    }
+    else
+    {
+        if(!s_status && s < Constants::_xrph_52202_ua9_pos - Constants::_cry3_51799_ua9_pos_Septum)
+        {
+            DRIFTL0 = Constants::_xrph_52202_ua9_pos - (Constants::_cry3_51799_ua9_pos_Septum + s);
+            // DRIFT0-S
+            if(!magnet->GetNewCoordDrift(DRIFTL0,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+            if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x0[0],coord_x0[1],Constants::_cry3_51799_ua9_pos_Septum+s);
+            gr_x->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[0]);
+            gr_xp->SetPoint(gr_x_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[1]);
+            gr_y->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[2]);
+            gr_yp->SetPoint(gr_y_ipoint,Constants::_cry3_51799_ua9_pos_Septum+s,coord_x0[3]);
+            gr_x_ipoint++;
+            gr_y_ipoint++;
+
+            s_status = kTRUE;
+        }
+        else if(s_status)
+        {
+            // DRIFT0
+            if(!magnet->GetNewCoordDrift(DRIFTL0,order,coord_x0,coord_x,APH,APV))
+            {if(print) cout<<"## At : "<<"DRIFT"<<" [m] ##"<<endl; /*continue;*/}
+        }
+    }
+    //-----------------------------------------------------------------------------------------------------------------------------//
+    if(s_status)
+    {
+        // FINAL
+        if(print) printf("%10.15f , %10.15f , %10.15f\n",coord_x[0],coord_x[1],Constants::_xrph_52202_ua9_pos);
+        gr_x->SetPoint(gr_x_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[0]);
+        gr_xp->SetPoint(gr_x_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[1]);
+        gr_y->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[2]);
+        gr_yp->SetPoint(gr_y_ipoint,Constants::_xrph_52202_ua9_pos,coord_x[3]);
+    }
+
+    delete [] coord_temp_1_x;
+    delete [] coord_temp_2_x;
+    delete magnet;
 }
 
 Double_t getGamma(Double_t mass, Double_t pmag)

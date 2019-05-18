@@ -195,11 +195,6 @@ void function_1(TString inputFileName)
     //--------------------------------------------------------------------------//
     //-------------------------------- HISTOS ----------------------------------//
     //--------------------------------------------------------------------------//
-    TH1D* h_1 = new TH1D("h_1","L_{c} E [GeV/c^{2}] all",3000,0.0,300.0);
-    TH1D* h_2 = new TH1D("h_2","L_{c} E [GeV/c^{2}, after target+crystal mm] all",3000,0.0,300.0);
-    TH2D* h_3 = new TH2D("h_3","L_{c} E vs #Theta",4000,0,0.4,3000,0.0,300.0);
-    TH2D* h_4 = new TH2D("h_4","L_{c} E vs #Theta (channeled)",4000,0,0.4,3000,0.0,300.0);
-    TH2D* h_5 = new TH2D("h_5","L_{c} E vs #Theta (channeled & non-channeled)",4000,0,0.4,3000,0.0,300.0);
     TH1D* h_6 = new TH1D("h_6","L_{c} P [GeV/c] background",3000,0.0,300.0);
     TH1D* h_7 = new TH1D("h_7","L_{c} P [GeV/c] signal",3000,0.0,300.0);
 
@@ -214,95 +209,75 @@ void function_1(TString inputFileName)
     tree->Branch("CHBKG",   &CHBKG, "CHBKG/I");
     //--------------------------------------------------------------------------//
 
-    const Double_t tau_LambdaC = 200.0*1.0E-6; //ns
+    const Int_t nRepeat         = 5;
+    const Double_t tau_LambdaC  = 200.0*1.0E-6; //ns
     const Int_t intCrystalTypeCondition_Si293 = 0;
-    const Double_t _Ltarget   = 3.0;        // mm
-    const Double_t _Rcrystal  = 1.0e3;      // mm
-    const Double_t _Lcrystal  = 15.0;       // mm
-    const Double_t deltaTheta = 100.0e-6;   // rad
+    const Double_t _Ltarget     = 3.0;        // mm
+    const Double_t _Rcrystal    = 1.0e3;      // mm
+    const Double_t _Lcrystal    = 15.0;       // mm
+    const Double_t deltaTheta   = 100.0e-6;   // rad
 
-    Bool_t channeled    = kFALSE;
-    Bool_t background   = kFALSE;
-
-    for(Int_t eventID = 0; eventID < nEntries; eventID++)
+    for(Int_t iRepeat = 0; iRepeat < nRepeat; iRepeat++)
     {
-        fChain1->GetEntry(eventID);
+        cout<<endl<<endl<<"--> Run: "<<iRepeat+1<<"/"<<nRepeat<<endl;
 
-        if(eventID%100 == 0)
+        for(Int_t eventID = 0; eventID < nEntries; eventID++)
         {
-            printf("\r--> Working: %3.1f %%",100*(Double_t)eventID/nEntries);
-            fflush(stdout);
-        }
+            fChain1->GetEntry(eventID);
 
-        for(Int_t i = 0; i < _Nparticle; i++)
-        {
-            if(_ID[i] == 4122) // Lambda_c = 4122
+            if(eventID%100 == 0)
             {
-                channeled   = kFALSE;
-                background  = kFALSE;
+                printf("\r--> Working: %3.1f %%",100*(Double_t)eventID/nEntries);
+                fflush(stdout);
+            }
 
-                h_1->Fill(_E[i]);
-                h_3->Fill(TMath::Abs(TMath::ATan(_Px[i]/_Pz[i])),_E[i]);
-
-                Double_t angleBetweenLatticeAndtrack = getAngleBetweenLatticeAndtrack( _Px[i], _Py[i], _Pz[i], 1, 0, 0);
-                Double_t pmag = TMath::Sqrt(_Px[i]*_Px[i] + _Py[i]*_Py[i] + _Pz[i]*_Pz[i]);
-
-
-//                if(ifNotDecayInTarget(_Ltarget, tau_LambdaC, _mass[i], pmag))
-//                if(ifNotDecay(_Lcrystal, tau_LambdaC, _mass[i], pmag))
-                if(ifNotDecayInTargetCrystal(_Ltarget, _Lcrystal, tau_LambdaC, _mass[i], pmag))
+            for(Int_t i = 0; i < _Nparticle; i++)
+            {
+                if(_ID[i] == 4122) // Lambda_c = 4122
                 {
-                    h_2->Fill(_E[i]);
+                    Double_t angleBetweenLatticeAndtrack = getAngleBetweenLatticeAndtrack( _Px[i], _Py[i], _Pz[i], 1, 0, 0);
+                    Double_t pmag = TMath::Sqrt(_Px[i]*_Px[i] + _Py[i]*_Py[i] + _Pz[i]*_Pz[i]);
 
-                    Px      = _Px[i];
-                    Py      = _Py[i];
-                    Pz      = _Pz[i];
-                    E       = _E[i];
-                    mass    = _mass[i];
                     CHBKG   = 0;
 
-                    //----------------------------------------------------------//
-                    // Background
-                    if( TMath::ATan(_Px[i]/_Pz[i]) < (_Lcrystal/_Rcrystal+deltaTheta) && TMath::ATan(_Px[i]/_Pz[i]) > (_Lcrystal/_Rcrystal-deltaTheta) )
+    //                if(ifNotDecayInTarget(_Ltarget, tau_LambdaC, _mass[i], pmag))
+    //                if(ifNotDecay(_Lcrystal, tau_LambdaC, _mass[i], pmag))
+                    if(ifNotDecayInTargetCrystal(_Ltarget, _Lcrystal, tau_LambdaC, _mass[i], pmag))
                     {
-                        background = kTRUE;
-                    }
-                    //----------------------------------------------------------//
-                    // Signal
-                    if(ifThetaEffIsOk(angleBetweenLatticeAndtrack, _Rcrystal, pmag, _mass[i], intCrystalTypeCondition_Si293))
-                    {
-                        if(ifAcceptanceFactorN0IsOk( pmag, _mass[i], _Rcrystal, intCrystalTypeCondition_Si293))
+                        Px      = _Px[i];
+                        Py      = _Py[i];
+                        Pz      = _Pz[i];
+                        E       = _E[i];
+                        mass    = _mass[i];
+
+
+                        //----------------------------------------------------------//
+                        // Background
+                        if( TMath::ATan(_Px[i]/_Pz[i]) < (_Lcrystal/_Rcrystal+deltaTheta) && TMath::ATan(_Px[i]/_Pz[i]) > (_Lcrystal/_Rcrystal-deltaTheta) )
                         {
-                            if(ifNotDechannel(pmag, _mass[i], _Rcrystal, _Lcrystal, intCrystalTypeCondition_Si293))
+                            h_6->Fill(pmag);
+                            CHBKG = 2;
+                        }
+                        //----------------------------------------------------------//
+                        // Signal
+                        if(ifThetaEffIsOk(angleBetweenLatticeAndtrack, _Rcrystal, pmag, _mass[i], intCrystalTypeCondition_Si293))
+                        {
+                            if(ifAcceptanceFactorN0IsOk( pmag, _mass[i], _Rcrystal, intCrystalTypeCondition_Si293))
                             {
-                                h_4->Fill(TMath::Abs(TMath::ATan(_Px[i]/_Pz[i])),_E[i]);
-                                channeled = kTRUE;
+                                if(ifNotDechannel(pmag, _mass[i], _Rcrystal, _Lcrystal, intCrystalTypeCondition_Si293))
+                                {
+                                    h_7->Fill(pmag);
+                                    CHBKG = 1;
+                                }
                             }
                         }
+                        //----------------------------------------------------------//
                     }
-                    //----------------------------------------------------------//
-                }
 
-                if(channeled)
-                {
-                    h_5->Fill(TMath::Abs(TMath::ATan(_Px[i]/_Pz[i])) + _Lcrystal/_Rcrystal,_E[i]);
-                    h_7->Fill(pmag);
-                    CHBKG = 1;
-                }
-                else
-                {
-                    h_5->Fill(TMath::Abs(TMath::ATan(_Px[i]/_Pz[i])),_E[i]);
-                }
-
-                if(background)
-                {
-                    h_6->Fill(pmag);
-                    CHBKG = 2;
-                }
-
-                if(channeled || background)
-                {
-                    tree->Fill();
+                    if(CHBKG > 0)
+                    {
+                        tree->Fill();
+                    }
                 }
             }
         }
@@ -314,11 +289,6 @@ void function_1(TString inputFileName)
     cout<<"--> Output file: "<<output_file_name<<endl;
     TFile* file = new TFile(output_file_name,"recreate");
 
-    h_1->Write();
-    h_2->Write();
-    h_3->Write();
-    h_4->Write();
-    h_5->Write();
     h_6->Write();
     h_7->Write();
 
@@ -485,7 +455,7 @@ void function_3()
     TString name;
     for(Int_t i = 0; i < nFiles; i++)
     {
-    name = "../../home2/SPS_Sim_Data/hardccbar_";
+        name = "../../home2/SPS_Sim_Data/hardccbar_";
         name += i+1;
         name += ".root_output_function_2.root";
         _file[i] = TFile::Open(name.Data());
@@ -527,13 +497,10 @@ void function_4()
     cout<<endl<<"--> function_4() <--"<<endl;
     const Int_t nFiles = 20;
     TFile *_file[nFiles];
-    TH1D* h_1 = new TH1D("h_1","L_{c} E [GeV/c^{2}] all",3000,0.0,300.0);
-    TH1D* h_2 = new TH1D("h_2","L_{c} E [GeV/c^{2}, after target+crystal mm] all",3000,0.0,300.0);
-    TH2D* h_3 = new TH2D("h_3","L_{c} E vs #Theta",4000,0,0.4,3000,0.0,300.0);
-    TH2D* h_4 = new TH2D("h_4","L_{c} E vs #Theta (channeled)",4000,0,0.4,3000,0.0,300.0);
-    TH2D* h_5 = new TH2D("h_5","L_{c} E vs #Theta (channeled & non-channeled)",4000,0,0.4,3000,0.0,300.0);
     TH1D* h_6 = new TH1D("h_6","L_{c} P [GeV/c] background",3000,0.0,300.0);
     TH1D* h_7 = new TH1D("h_7","L_{c} P [GeV/c] signal",3000,0.0,300.0);
+
+    TChain *fChain1 = new TChain("Tree");
 
     TString name;
     for(Int_t i = 0; i < nFiles; i++)
@@ -543,40 +510,63 @@ void function_4()
         name += ".root_output_function_1.root";
         _file[i] = TFile::Open(name.Data());
         if(_file[i]->IsOpen())
+        {
             cout<<"--> Filename: "<<name<<endl;
+            fChain1->Add(name.Data());
+        }
 
-        TH1D* hh_1 = (TH1D*)_file[i]->Get("h_1");
-        TH1D* hh_2 = (TH1D*)_file[i]->Get("h_2");
-        TH2D* hh_3 = (TH2D*)_file[i]->Get("h_3");
-        TH2D* hh_4 = (TH2D*)_file[i]->Get("h_4");
-        TH2D* hh_5 = (TH2D*)_file[i]->Get("h_5");
         TH1D* hh_6 = (TH1D*)_file[i]->Get("h_6");
         TH1D* hh_7 = (TH1D*)_file[i]->Get("h_7");
 
-        h_1->Add(hh_1);
-        h_2->Add(hh_2);
-        h_3->Add(hh_3);
-        h_4->Add(hh_4);
-        h_5->Add(hh_5);
         h_6->Add(hh_6);
         h_7->Add(hh_7);
     }
+
+    Double_t Px, Py, Pz, E, mass;
+    Int_t CHBKG;
+    fChain1->SetBranchAddress("Px",      &Px);
+    fChain1->SetBranchAddress("Py",      &Py);
+    fChain1->SetBranchAddress("Pz",      &Pz);
+    fChain1->SetBranchAddress("E",       &E);
+    fChain1->SetBranchAddress("mass",    &mass);
+    fChain1->SetBranchAddress("CHBKG",   &CHBKG);
+
+    Long64_t nEntries = fChain1->GetEntries();
+    cout<<endl<<"--> nEntries = "<<nEntries<<endl;
+
+    TString output_file_name = "common_histo_output_function_4.root";
+    cout<<"--> Output file: "<<output_file_name<<endl;
+    TFile* file = new TFile(output_file_name,"recreate");
+
+    TTree* tree = new TTree("TreeCommon", "Tree with Lc+ Signal and Background");
+    tree->Branch("Px",      &Px,    "Px/D");
+    tree->Branch("Py",      &Py,    "Py/D");
+    tree->Branch("Pz",      &Pz,    "Pz/D");
+    tree->Branch("E",       &E,     "E/D");
+    tree->Branch("mass",    &mass,  "mass/D");
+    tree->Branch("CHBKG",   &CHBKG, "CHBKG/I");
+
+    for(Int_t iEntry = 0; iEntry < nEntries; iEntry++)
+    {
+        fChain1->GetEntry(iEntry);
+
+        if(iEntry%100 == 0)
+        {
+            printf("\r--> Working: %3.1f %%",100*(Double_t)iEntry/nEntries);
+            fflush(stdout);
+        }
+
+        tree->Fill();
+    }
+    fChain1->Delete();
 
     cout<<endl;
     //--------------------------------------------------------------------------//
     //-------------------------------- WRITE -----------------------------------//
     //--------------------------------------------------------------------------//
-    TString output_file_name = "common_histo_output_function_4.root";
-    cout<<"--> Output file: "<<output_file_name<<endl;
-    TFile* file = new TFile(output_file_name,"recreate");
-
-    h_1->Write();
-    h_2->Write();
-    h_3->Write();
-    h_4->Write();
-    h_5->Write();
     h_6->Write();
     h_7->Write();
+    tree->Write();
 
     file->Write();
     file->Close();
